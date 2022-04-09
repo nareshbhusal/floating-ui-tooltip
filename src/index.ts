@@ -1,179 +1,158 @@
-import { computePosition, flip, shift, offset, arrow, autoPlacement, hide } from '@floating-ui/dom';
+import createTooltipElement, { getChildren } from './tooltip-element';
 import addCSS from './addCSS';
-
-const addStyles = () => {
-
-  const styles = document.createElement('style');
-  styles.innerText = `
-  #tooltip h3 {
-    text-align: center;
-  }
-  #tooltip p {
-    color: blue;
-  }
-  #tooltip button {
-    border: 1px solid #ccc;
-    background: #eee;
-  }
-  `;
-  document.head.appendChild(styles);
-}
+import { Props, TooltipState, Instance } from './types';
+import floatingUITooltip from './floating-ui-tooltip';
+import defaultProps from './defaultProps';
+import debounce from './debounce';
+import { autoUpdate } from '@floating-ui/dom';
 
 // TODO: Ability to import js bundle without the css
-// TODO: Use debounce to prevent multiple calls for the same event
-// TODO: See all the events and hooks tippyjs uses
+// NOTE: Should the tooltip be appended to the body?
+// -- https://web.archive.org/web/20210827084020/https://atfzl.com/don-t-attach-tooltips-to-document-body
 
-const SCREEN_EDGE_MARGIN = 16;
-const TIP_EDGE_MARGIN = 16;
-const TIP_SIZE = 12;
-const TIP_WIDTH = Math.sqrt(2 * TIP_SIZE ** 2) / 2;
+class Tooltip {
+  readonly props: Props;
+  readonly reference: HTMLElement;
+  private tooltipElement!: HTMLElement;
+  private state: TooltipState = {
+    isShown: false,
+    isRemoved: false,
+    fui: undefined
+  }
+  private autoUpdateCleanup!: () => void;
+  private toHideTooltip: boolean = false;
+  private debouncedUpdate!: (arg: boolean | undefined) => void;
 
-const TIP_SIDES_MAP = {
-  top: "bottom",
-  right: "left",
-  bottom: "top",
-  left: "right"
-};
-
-export const createTooltip = async ({ PLACEMENT, OFFSET, tooltip, tip, target, toFlip=true, toShift=true }) => {
-  console.log(`toFlip: ${toFlip}`);
-
-  if(!target) return;
-  const { x, y, placement, middlewareData } = await computePosition(target, tooltip, {
-    placement: PLACEMENT,
-    middleware: [
-      offset({
-        mainAxis: OFFSET[0],
-        crossAxis: OFFSET[1]
-      }),
-      ...PLACEMENT === 'auto' ? [
-        autoPlacement(),
-      ]: [],
-      ...toShift ? [
-        shift({ padding: SCREEN_EDGE_MARGIN }),
-      ]: [],
-      ...PLACEMENT !== 'auto' && toFlip ? [
-        flip({
-          fallbackPlacements: ['right', 'left'],
-          fallbackStrategy: 'initialPlacement' // or `bestFit` (when no placement fits perfectly)
-        })
-      ]: [],
-      arrow({
-        element: tip,
-        padding: 2,
-      }),
-      hide()
-    ]
-  });
-
-  const { referenceHidden } = middlewareData.hide!;
-  console.log(`is hidden: ${referenceHidden}`)
-  console.log(middlewareData)
-
-  let arrowX,
-  arrowY;
-  if(middlewareData.arrow){
-    arrowX = middlewareData.arrow.x;
-    arrowY = middlewareData.arrow.y;
+  constructor(props: Props, target: HTMLElement) {
+    this.props = props;
+    this.reference = target;
+    addCSS();
   }
 
-  Object.assign(tooltip.style, {
-    visibility: referenceHidden ? 'hidden' : 'visible',
-    left: `${x+TIP_SIZE/2}px`, //test
-    top: `${y}px`
-  });
-
-  const staticSide = TIP_SIDES_MAP[placement.split("-")[0]];
-  let staticSideTipSizeMultiplier;
-  let top;
-  let left;
-  left = arrowX !== null ? `${arrowX + (TIP_SIZE)}px` : "";
-
-  switch(staticSide) {
-    case 'top':
-      staticSideTipSizeMultiplier = 1/1.7;
-    left = arrowX !== null ? `${arrowX + (TIP_SIZE*staticSideTipSizeMultiplier)}px` : "";
-    break;
-    case 'bottom':
-      staticSideTipSizeMultiplier = 1/2;
-    left = arrowX !== null ? `${arrowX + (TIP_SIZE*staticSideTipSizeMultiplier)}px` : "";
-    break;
-    case 'left':
-      staticSideTipSizeMultiplier = 0.005;
-    left = arrowX !== null ? `${arrowX}px` : "",
-    top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
-    break;
-    case 'right':
-      staticSideTipSizeMultiplier = 1.2;
-    left = arrowX !== null ? `${arrowX}px` : "",
-    top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
-    break;
+  private hookEventListeners() {
+    this.debouncedUpdate = debounce(
+      this.update.bind(this),
+      this.props.updateDebounce
+    );
+    this.autoUpdateCleanup = autoUpdate(
+      this.reference,
+      this.tooltipElement,
+      () => this.debouncedUpdate(undefined)
+    );
+    this.props.updateOnEvents.split(' ').forEach(event => {
+      window.addEventListener(
+        <keyof WindowEventMap>event,
+        () => this.debouncedUpdate(undefined) as unknown as EventListenerOrEventListenerObject
+      );
+    });
   }
-  top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
 
-  top = arrowY !== null ? `${arrowY}px` : "";
-  Object.assign(tip.style, {
-    left,
-    top,
-    right: "",
-    bottom: "",
-    [staticSide]: `-${TIP_SIZE*staticSideTipSizeMultiplier}px`
-  });
+  public async create() {
+    const toHide = false;
+    this.tooltipElement = createTooltipElement();
+    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0];
+    const { content: contentBox } = getChildren(this.tooltipElement);
+    const { allowHTML, content } = this.props;
+    if (allowHTML) {
+      contentBox.innerHTML = content;
+    } else {
+      contentBox.innerText = `${content}`;
+    }
+    window['getChildren'] = getChildren;
+
+    console.log(this.tooltipElement);
+
+    document.body.appendChild(this.tooltipElement);
+    await floatingUITooltip(
+      this.props,
+      this.tooltipElement,
+      this.reference,
+      toHide,
+      this.setState.bind(this)
+    );
+    this.hookEventListeners();
+  }
+
+  public getState() {
+    return this.state;
+  }
+
+  private setState(newState: Partial<TooltipState>) {
+    this.state = {
+      ...this.state,
+      ...newState
+    }
+  }
+
+  public async update(toHide?: boolean) {
+    toHide = toHide || this.toHideTooltip || false;
+    await floatingUITooltip(
+      this.props,
+      this.tooltipElement,
+      this.reference,
+      toHide,
+      this.setState.bind(this)
+    );
+  }
+  public hide() {
+    // hide() when tooltip is already hidden should prevent event listeners
+    // from showing tooltip without before running show() manually
+    this.toHideTooltip = true;
+    this.update(true);
+    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0];
+  }
+
+  public show() {
+    this.toHideTooltip = false;
+    this.update(false);
+    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[1];
+  }
+
+  public remove() {
+    this.tooltipElement.remove();
+    this.state = {
+      isShown: false,
+      isRemoved: true,
+      fui: undefined
+    }
+    this.autoUpdateCleanup();
+    this.props.updateOnEvents.split(' ').forEach(event => {
+      window.removeEventListener(
+        <keyof WindowEventMap>event,
+        this.debouncedUpdate as unknown as EventListenerOrEventListenerObject
+      );
+    });
+  }
 }
 
-const renderTooltip = () => {
-  console.log('this is tooltip lib')
-  const PLACEMENT = "right";
-  const OFFSET = [10, 0];
+async function createTooltip(
+  reference: HTMLElement,
+  props: Partial<Props>
+) {
+  const placement = props.placement || defaultProps.placement;
+  const transitionDuration = props.transitionDuration || defaultProps.transitionDuration;
+  const offset = props.offset || defaultProps.offset;
 
+  const allProps: Props = {
+    ...defaultProps,
+    ...props,
+    placement: <Props['placement']>placement,
+    transitionDuration: <Props['transitionDuration']>transitionDuration,
+    offset: <Props['offset']>offset,
+  };
+  const tooltipInstance = new Tooltip(allProps, reference);
+  await tooltipInstance.create();
 
-  // const target = document.querySelector("button.chakra-button");
-  const target = document.querySelector("button#menu-button-2");
-  // const target = document.querySelectorAll("div.chakra-stack")[3];
-  // const target = document.querySelector("select");
-  const tip = document.createElement("div");
-  const tooltipContent = document.createElement("div");
-  const tooltip = document.createElement("div");
-  addCSS();
-  addStyles();
+  const instance: Instance = {
+    props: tooltipInstance.props,
+    reference: tooltipInstance.reference,
+    getState: tooltipInstance.getState.bind(tooltipInstance),
+    show: tooltipInstance.show.bind(tooltipInstance),
+    hide: tooltipInstance.hide.bind(tooltipInstance),
+    remove: tooltipInstance.remove.bind(tooltipInstance),
+  }
 
-  tooltipContent.innerHTML = `
-  <div id="tooltip-container">
-  <h3>Tooltip Heading</h3>
-  <!--
-    <p>This is tooltip body text</p>
-  -->
-  <button onclick="window.greet()">Click Me!</button>
-  </div>
-  `;
+  return instance;
+}
 
-  tip.id = "tip";
-  tooltip.id = "tooltip";
-  tooltip.setAttribute('role', 'tooltip');
-  // tooltipContent.innerText = `My tooltip`;
-  tooltip.appendChild(tip);
-  tooltip.appendChild(tooltipContent);
-
-  tooltip.classList.add('popover');
-  tooltipContent.classList.add('popover-content');
-  tip.classList.add('popover-arrow');
-  Object.assign(tooltip.style, {
-    visibility: 'hidden',
-    top: 0,
-    left: 0
-  });
-
-  document.body.appendChild(tooltip);
-
-  window.setTimeout(async() => {
-    await createTooltip({ PLACEMENT, OFFSET, target, tip, tooltip });
-  }, 1000);
-  window.addEventListener('resize', async () => {
-    await createTooltip({ PLACEMENT, OFFSET, target, tip, tooltip, toFlip: false, toShift: false });
-  });
-  window.addEventListener('scroll', async () => {
-    await createTooltip({ PLACEMENT, OFFSET, target, tip, tooltip, toFlip: false, toShift: false });
-  });
-};
-
-export default renderTooltip;
+export default createTooltip;
