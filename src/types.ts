@@ -15,6 +15,7 @@ export interface Props {
   resetPlacementOnUpdate: boolean;
   hideOnTooltipEscape: boolean;
   hideOnReferenceHidden: boolean;
+  showOnCreate: boolean;
   maxWidth: number;
   arrowSizeScale: number;
   updateDebounce: number;

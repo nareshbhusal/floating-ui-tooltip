@@ -84,7 +84,7 @@ class Tooltip {
   }
 
   public async create() {
-    const toHide = false;
+    const toHide = this.props.showOnCreate;
     this.tooltipElement = createTooltipElement();
     this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0]+'ms';
     const { content: contentBox } = getChildren(this.tooltipElement);
