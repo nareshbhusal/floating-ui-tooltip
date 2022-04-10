@@ -6,12 +6,13 @@ import replace from '@rollup/plugin-replace';
 import { terser } from "rollup-plugin-terser";
 import peerDepsExternal from "rollup-plugin-peer-deps-external";
 import strip from '@rollup/plugin-strip';
+import { visualizer } from 'rollup-plugin-visualizer';
 import visualizeSource from 'rollup-plugin-source-map-explorer';
 
 const mode = process.env.NODE_ENV === 'development' ? 'development' : 'production';
 
-//const functionsToRemove = mode === 'production' ? ['console.log', 'assert.*', 'debug', 'alert'] : [];
-const functionsToRemove = []; // TESTONLY
+// const functionsToRemove = mode === 'production' ? ['console.log', 'assert.*', 'debug', 'alert'] : [];
+const functionsToRemove = [];
 
 const bundleOutputDirName = `${mode === 'development' ? 'dev' : 'dist'}`;
 const configOptions = [
@@ -75,12 +76,20 @@ function getConfig({ input, name, outputFile, tsconfig, packageJsonPath }) {
             }),
             ...mode === 'production' ? [
                 terser(),
+                visualizeSource({
+                    filename: `.rollup-build-stats/${name.toLowerCase()}-${mode.toLowerCase()}.html`,
+                    format: 'html',
+                    gzip: false
+                }),
             ] : [],
-            /* visualizeSource({
-                filename: `.rollup-build-stats/${name.toLowerCase()}-${mode.toLowerCase()}.html`,
-                format: 'html',
-                gzip: false
-            }), */
+            ...mode === 'development' ? [
+                visualizer({
+                    filename: `.rollup-build-stats/${name.toLowerCase()}-${mode.toLowerCase()}.html`,
+                    title: 'Lusift Rollup Visualizer',
+                    sourcemap: true,
+                    gzipSize: true,
+                }),
+            ] : [],
         ]
     };
     return config;

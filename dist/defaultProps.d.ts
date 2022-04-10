@@ -5,6 +5,7 @@ declare const defaultProps: {
     offset: number[];
     hideOnClick: boolean;
     placement: string;
+    resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;
     hideOnReferenceHidden: boolean;
     maxWidth: number;

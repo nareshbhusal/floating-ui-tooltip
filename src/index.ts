@@ -68,7 +68,8 @@ class Tooltip {
       this.tooltipElement,
       this.reference,
       toHide,
-      this.setState.bind(this)
+      true,
+      this.setState.bind(this),
     );
     this.hookEventListeners();
   }
@@ -91,6 +92,7 @@ class Tooltip {
       this.tooltipElement,
       this.reference,
       toHide,
+      false,
       this.setState.bind(this)
     );
   }

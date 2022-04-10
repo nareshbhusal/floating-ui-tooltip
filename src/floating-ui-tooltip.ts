@@ -28,6 +28,7 @@ const floatingUITooltip = async (
   tooltipElement: HTMLElement,
   target: HTMLElement,
   toHide: boolean,
+  newlyShown: boolean,
   setShowState: (state: Partial<TooltipState>)=> void
 ) => {
  const { toFlip=false, toShift=true } = {};
@@ -37,11 +38,15 @@ const floatingUITooltip = async (
     hideOnReferenceHidden,
     offset: passedOffset,
     hideOnTooltipEscape,
-    arrowSizeScale
+    arrowSizeScale,
+    resetPlacementOnUpdate
   } = tooltipProps;
+  console.log(passedPlacement !== 'auto' && toFlip)
 
   const { box, content, arrow: arrowElement } = getChildren(tooltipElement);
   const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE
+
+  // NOTE: autoPlacement changes the placement on every update
 
   if(!target) return;
   const computePositionConfig = {
@@ -50,13 +55,13 @@ const floatingUITooltip = async (
         mainAxis: passedOffset[0],
         crossAxis: passedOffset[1]
       }),
-      ...passedPlacement === 'auto' ? [
+      ...passedPlacement === 'auto' && (newlyShown || resetPlacementOnUpdate) ? [
         autoPlacement(),
       ]: [],
       ...toShift ? [
         shift({ padding: SCREEN_EDGE_MARGIN }),
       ]: [],
-      ...passedPlacement !== 'auto' && toFlip ? [
+      ...(passedPlacement !== 'auto' && toFlip) ? [
         flip({
           fallbackPlacements: ['right', 'left'],
           fallbackStrategy: 'initialPlacement' // or `bestFit` (when no placement fits perfectly)

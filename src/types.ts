@@ -10,6 +10,7 @@ export interface Props {
   offset: [number | undefined, number | undefined];
   hideOnClick: boolean | 'target';
   placement: Placement;
+  resetPlacementOnUpdate: boolean;
   hideOnTooltipEscape: boolean;
   hideOnReferenceHidden: boolean;
   maxWidth: number;

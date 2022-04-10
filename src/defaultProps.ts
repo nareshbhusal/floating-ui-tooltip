@@ -5,6 +5,7 @@ const defaultProps = {
   offset: [10, 0],
   hideOnClick: true,
   placement: 'top',
+  resetPlacementOnUpdate: false,
   hideOnTooltipEscape: true,
   hideOnReferenceHidden: true,
   maxWidth: 350,
