@@ -46,8 +46,6 @@ const floatingUITooltip = async (
   const { box, content, arrow: arrowElement } = getChildren(tooltipElement);
   const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE
 
-  // NOTE: autoPlacement changes the placement on every update
-
   if(!target) return;
   const computePositionConfig = {
     middleware: [
@@ -87,17 +85,6 @@ const floatingUITooltip = async (
   const { x, y, placement, middlewareData } = fui;
 
   const { referenceHidden, escaped } = middlewareData.hide!;
-  /* console.log(`is hidden: ${referenceHidden || toHide}`)
-  console.log(middlewareData)
-  console.log(middlewareData.hide)
-  console.log(middlewareData.shift)
-  console.log(middlewareData.arrow)
-
-  console.log(middlewareData.hide!.escapedOffsets);
-  console.log(middlewareData.hide!.referenceHiddenOffsets);
-
-  console.log('----------------');
-  console.log('\n\n\n') */
 
   let arrowX,
   arrowY;

@@ -1,4 +1,4 @@
-const NODE_CLASSNAME_PREFIX = 'floating-ui-tooltip';
+export const NODE_CLASSNAME_PREFIX = 'floating-ui-tooltip';
 
 export function div(): HTMLDivElement {
   return document.createElement('div');
