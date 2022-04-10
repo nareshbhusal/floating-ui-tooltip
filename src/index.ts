@@ -107,7 +107,7 @@ class Tooltip {
     this.hookEventListeners();
   }
 
-  public getState() {
+  public getState(): TooltipState {
     return this.state;
   }
 

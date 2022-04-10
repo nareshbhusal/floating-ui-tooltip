@@ -76,11 +76,11 @@ function getConfig({ input, name, outputFile, tsconfig, packageJsonPath }) {
             }),
             ...mode === 'production' ? [
                 terser(),
-                visualizeSource({
+                /* visualizeSource({
                     filename: `.rollup-build-stats/${name.toLowerCase()}-${mode.toLowerCase()}.html`,
                     format: 'html',
                     gzip: false
-                }),
+                }), */
             ] : [],
             ...mode === 'development' ? [
                 visualizer({

@@ -2,6 +2,7 @@ import { Instance } from './types';
 declare const defaultProps: {
     allowHTML: boolean;
     content: string;
+    arrow: boolean;
     transitionDuration: number[];
     offset: number[];
     hideOnClick: boolean;

@@ -3,6 +3,7 @@ export declare type Placement = FUIPlacement | 'auto';
 export interface Props {
     allowHTML: boolean;
     content: string;
+    arrow: boolean;
     transitionDuration: number | [number | null, number | null];
     offset: [number | undefined, number | undefined];
     hideOnClick: boolean | 'target';

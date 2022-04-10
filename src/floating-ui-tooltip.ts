@@ -39,7 +39,8 @@ const floatingUITooltip = async (
     offset: passedOffset,
     hideOnTooltipEscape,
     arrowSizeScale,
-    resetPlacementOnUpdate
+    resetPlacementOnUpdate,
+    arrow: toShowArrow
   } = tooltipProps;
 
   const { box, content, arrow: arrowElement } = getChildren(tooltipElement);
@@ -64,10 +65,12 @@ const floatingUITooltip = async (
           fallbackStrategy: 'initialPlacement' // or `bestFit` (when no placement fits perfectly)
         })
       ]: [],
-      arrow({
-        element: arrowElement,
-        padding: TIP_EDGE_MARGIN,
-      }),
+      ...toShowArrow ? [
+        arrow({
+          element: arrowElement,
+          padding: TIP_EDGE_MARGIN,
+        })
+      ]: [],
       size({
         apply({width, height, reference, floating}) {
         }
