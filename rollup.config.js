@@ -11,8 +11,8 @@ import visualizeSource from 'rollup-plugin-source-map-explorer';
 
 const mode = process.env.NODE_ENV === 'development' ? 'development' : 'production';
 
-// const functionsToRemove = mode === 'production' ? ['console.log', 'assert.*', 'debug', 'alert'] : [];
-const functionsToRemove = [];
+const functionsToRemove = mode === 'production' ? ['console.log', 'assert.*', 'debug', 'alert'] : [];
+// const functionsToRemove = [];
 
 const bundleOutputDirName = `${mode === 'development' ? 'dev' : 'dist'}`;
 const configOptions = [

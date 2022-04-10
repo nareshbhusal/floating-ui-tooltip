@@ -1,9 +1,11 @@
+import { Instance } from './types';
 declare const defaultProps: {
     allowHTML: boolean;
     content: string;
     transitionDuration: number[];
     offset: number[];
     hideOnClick: boolean;
+    onClickOutside: (instance: Instance, event: MouseEvent) => void;
     placement: string;
     resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;

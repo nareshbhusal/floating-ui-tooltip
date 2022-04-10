@@ -41,7 +41,6 @@ const floatingUITooltip = async (
     arrowSizeScale,
     resetPlacementOnUpdate
   } = tooltipProps;
-  console.log(passedPlacement !== 'auto' && toFlip)
 
   const { box, content, arrow: arrowElement } = getChildren(tooltipElement);
   const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE

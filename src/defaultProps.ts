@@ -1,9 +1,12 @@
+import { Instance } from './types';
+
 const defaultProps = {
   allowHTML: true,
   content: '',
   transitionDuration: [300, 250],
   offset: [10, 0],
-  hideOnClick: true,
+  hideOnClick: true, // `true` for anywhere outside the tooltip to hide it, 'target' for only when the target is clicked
+  onClickOutside: (instance: Instance, event: MouseEvent) => {},
   placement: 'top',
   resetPlacementOnUpdate: false,
   hideOnTooltipEscape: true,

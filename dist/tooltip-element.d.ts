@@ -1,3 +1,4 @@
+export declare const NODE_CLASSNAME_PREFIX = "floating-ui-tooltip";
 export declare function div(): HTMLDivElement;
 declare const createTooltipElement: () => HTMLElement;
 export interface TooltipElementChildren {

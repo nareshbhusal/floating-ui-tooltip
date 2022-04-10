@@ -6,6 +6,7 @@ export interface Props {
     transitionDuration: number | [number | null, number | null];
     offset: [number | undefined, number | undefined];
     hideOnClick: boolean | 'target';
+    onClickOutside: (instance: Instance, event: MouseEvent) => void;
     placement: Placement;
     resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;

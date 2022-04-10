@@ -9,6 +9,19 @@ import { autoUpdate } from '@floating-ui/dom';
 // TODO: Ability to import js bundle without the css
 // NOTE: Should the tooltip be appended to the body?
 // -- https://web.archive.org/web/20210827084020/https://atfzl.com/don-t-attach-tooltips-to-document-body
+// TODO: Add onClickOutside method (when clicked outside of the tooltip or reference element)
+
+const appendTo = () => document.body;
+
+function onClickOutside(
+  reference: HTMLElement,
+  instance: Instance,
+  event: MouseEvent
+) {
+  if (instance.props.hideOnClick === true) {
+    instance.hide();
+  }
+}
 
 class Tooltip {
   readonly props: Props;
@@ -45,12 +58,35 @@ class Tooltip {
         () => this.debouncedUpdate(undefined) as unknown as EventListenerOrEventListenerObject
       );
     });
+    window.addEventListener('click', this.clickHandler.bind(this));
+  }
+
+  private clickHandler = (event: MouseEvent) => {
+    if (!this.state.isShown) return;
+
+    // if click is outside of tooltip and reference
+    if (
+      !this.tooltipElement.contains(event.target as Node) &&
+      !this.reference.contains(event.target as Node)
+    ) {
+      if (this.props.onClickOutside) {
+        this.props.onClickOutside(this, event);
+      }
+    }
+
+    if (this.props.hideOnClick === 'target') {
+      if (event.target === this.reference) {
+        this.hide();
+      }
+    } else if (this.props.hideOnClick) {
+      this.hide();
+    }
   }
 
   public async create() {
     const toHide = false;
     this.tooltipElement = createTooltipElement();
-    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0];
+    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0]+'ms';
     const { content: contentBox } = getChildren(this.tooltipElement);
     const { allowHTML, content } = this.props;
     if (allowHTML) {
@@ -58,11 +94,8 @@ class Tooltip {
     } else {
       contentBox.innerText = `${content}`;
     }
-    window['getChildren'] = getChildren;
 
-    console.log(this.tooltipElement);
-
-    document.body.appendChild(this.tooltipElement);
+    appendTo().appendChild(this.tooltipElement);
     await floatingUITooltip(
       this.props,
       this.tooltipElement,
@@ -101,13 +134,13 @@ class Tooltip {
     // from showing tooltip without before running show() manually
     this.toHideTooltip = true;
     this.update(true);
-    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0];
+    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0]+'ms';
   }
 
   public show() {
     this.toHideTooltip = false;
     this.update(false);
-    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[1];
+    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[1]+'ms';
   }
 
   public remove() {
@@ -118,6 +151,7 @@ class Tooltip {
       fui: undefined
     }
     this.autoUpdateCleanup();
+    window.removeEventListener('click', this.clickHandler.bind(this));
     this.props.updateOnEvents.split(' ').forEach(event => {
       window.removeEventListener(
         <keyof WindowEventMap>event,
