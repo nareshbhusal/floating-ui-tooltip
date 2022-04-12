@@ -53,6 +53,7 @@
   color: #111;
   border-radius: inherit;
   padding: 5px 7px;
+  padding: 0;
   z-index: 2;
 }
 

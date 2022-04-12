@@ -4,7 +4,7 @@ export function div(): HTMLDivElement {
   return document.createElement('div');
 }
 
-const createTooltipElement = (): HTMLElement => {
+const createTooltipElement = (): HTMLDivElement => {
 
   const tooltipRoot = div();
   const tooltipBox = div();

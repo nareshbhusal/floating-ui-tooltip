@@ -29,7 +29,7 @@ const floatingUITooltip = async (
   target: HTMLElement,
   toHide: boolean,
   newlyShown: boolean,
-  setShowState: (state: Partial<TooltipState>)=> void
+  setState: (state: Partial<TooltipState>)=> void
 ) => {
  const { toFlip=false, toShift=true } = {};
 
@@ -103,10 +103,6 @@ const floatingUITooltip = async (
 
   tooltipElement.setAttribute('data-state', visibility);
 
-  setShowState({
-    isShown: visibility === 'visible',
-    fui
-  });
 
   Object.assign(tooltipElement.style, {
     visibility,
@@ -151,6 +147,16 @@ const floatingUITooltip = async (
     right: "",
     bottom: "",
     [staticSide]: `-${TIP_SIZE*staticSideTipSizeMultiplier}px`
+  });
+
+  if (newlyShown) {
+    console.log('setting state after newlyShown')
+  } else {
+    console.log('setting state on update')
+  }
+  setState({
+    isShown: visibility === 'visible',
+    fui
   });
 
   return fui;

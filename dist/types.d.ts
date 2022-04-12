@@ -8,10 +8,13 @@ export interface Props {
     offset: [number | undefined, number | undefined];
     hideOnClick: boolean | 'target';
     onClickOutside: (instance: Instance, event: MouseEvent) => void;
+    onShow: (instance: Instance) => void;
+    onHide: (instance: Instance) => void;
     placement: Placement;
     resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;
     hideOnReferenceHidden: boolean;
+    showOnCreate: boolean;
     maxWidth: number;
     arrowSizeScale: number;
     updateDebounce: number;
@@ -30,4 +33,5 @@ export interface Instance {
     show: () => void;
     hide: () => void;
     remove: () => void;
+    update: () => void;
 }

@@ -4,29 +4,21 @@ import { Props, TooltipState, Instance } from './types';
 import floatingUITooltip from './floating-ui-tooltip';
 import defaultProps from './defaultProps';
 import debounce from './debounce';
+import { doesElementHasTransition, onTransitionEnd } from './utils';
 import { autoUpdate } from '@floating-ui/dom';
 
 // TODO: Ability to import js bundle without the css
+// TODO: Implement props.maxWidth
 // NOTE: Should the tooltip be appended to the body?
 // -- https://web.archive.org/web/20210827084020/https://atfzl.com/don-t-attach-tooltips-to-document-body
-// TODO: Add onClickOutside method (when clicked outside of the tooltip or reference element)
+// TODO: Stop shifting along cross-axis on update
 
 const appendTo = () => document.body;
-
-function onClickOutside(
-  reference: HTMLElement,
-  instance: Instance,
-  event: MouseEvent
-) {
-  if (instance.props.hideOnClick === true) {
-    instance.hide();
-  }
-}
 
 class Tooltip {
   readonly props: Props;
   readonly reference: HTMLElement;
-  private tooltipElement!: HTMLElement;
+  private tooltipElement!: HTMLDivElement;
   private state: TooltipState = {
     isShown: false,
     isRemoved: false,
@@ -35,6 +27,7 @@ class Tooltip {
   private autoUpdateCleanup!: () => void;
   private toHideTooltip: boolean = false;
   private debouncedUpdate!: (arg: boolean | undefined) => void;
+  private transitionDuration: number = 0;
 
   constructor(props: Props, target: HTMLElement) {
     this.props = props;
@@ -83,10 +76,15 @@ class Tooltip {
     }
   }
 
+  private updateTransitionDuration(duration: number) {
+    this.transitionDuration = duration;
+    this.tooltipElement.style.transitionDuration = `${duration}ms`;
+  }
+
   public async create() {
-    const toHide = this.props.showOnCreate;
+    const toHide = !this.props.showOnCreate;
     this.tooltipElement = createTooltipElement();
-    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0]+'ms';
+    this.updateTransitionDuration(this.props.transitionDuration[0]);
     const { content: contentBox } = getChildren(this.tooltipElement);
     const { allowHTML, content } = this.props;
     if (allowHTML) {
@@ -105,6 +103,8 @@ class Tooltip {
       this.setState.bind(this),
     );
     this.hookEventListeners();
+    /* console.log(this.props.onShow)
+    console.log(this.state.isShown) */
   }
 
   public getState(): TooltipState {
@@ -112,9 +112,33 @@ class Tooltip {
   }
 
   private setState(newState: Partial<TooltipState>) {
+    const visibilityChanged = typeof newState.isShown !== 'undefined' &&
+      newState.isShown !== this.state.isShown;
+
+    /* if(!visibilityChanged){
+      console.log('visibility not changed')
+    } else {
+      console.log('visibility changed')
+    } */
+
+    if (visibilityChanged && newState.isShown){
+      const debouncedOnShow = debounce(this.props.onShow, 0);
+      if(this.transitionDuration) {
+        onTransitionEnd(this.tooltipElement, () => {
+          debouncedOnShow(this);
+        });
+      } else {
+        debouncedOnShow(this);
+      }
+    }
+
     this.state = {
       ...this.state,
       ...newState
+    }
+
+    if(visibilityChanged && !newState.isShown) {
+      this.props.onHide(this);
     }
   }
 
@@ -129,18 +153,19 @@ class Tooltip {
       this.setState.bind(this)
     );
   }
-  public hide() {
+  public async hide() {
     // hide() when tooltip is already hidden should prevent event listeners
     // from showing tooltip without before running show() manually
     this.toHideTooltip = true;
-    this.update(true);
-    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[0]+'ms';
+    await this.update(true);
+    this.updateTransitionDuration(this.props.transitionDuration[0]);
   }
 
-  public show() {
+  public async show() {
+    // this.props.onShow(this);
     this.toHideTooltip = false;
-    this.update(false);
-    this.tooltipElement.style.transitionDuration = this.props.transitionDuration[1]+'ms';
+    await this.update(false);
+    this.updateTransitionDuration(this.props.transitionDuration[1]);
   }
 
   public remove() {
@@ -164,10 +189,11 @@ class Tooltip {
 async function createTooltip(
   reference: HTMLElement,
   props: Partial<Props>
-) {
+): Promise<Instance> {
   const placement = props.placement || defaultProps.placement;
   const transitionDuration = props.transitionDuration || defaultProps.transitionDuration;
-  const offset = props.offset || defaultProps.offset;
+  // const offset = props.offset || defaultProps.offset;
+  const offset = defaultProps.offset; // TODO: Remove this line
 
   const allProps: Props = {
     ...defaultProps,
@@ -186,6 +212,7 @@ async function createTooltip(
     show: tooltipInstance.show.bind(tooltipInstance),
     hide: tooltipInstance.hide.bind(tooltipInstance),
     remove: tooltipInstance.remove.bind(tooltipInstance),
+    update: tooltipInstance.update.bind(tooltipInstance),
   }
 
   return instance;

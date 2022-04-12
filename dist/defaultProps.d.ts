@@ -7,10 +7,13 @@ declare const defaultProps: {
     offset: number[];
     hideOnClick: boolean;
     onClickOutside: (instance: Instance, event: MouseEvent) => void;
+    onShow: (instance: Instance) => void;
+    onHide: (instance: Instance) => void;
     placement: string;
     resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;
     hideOnReferenceHidden: boolean;
+    showOnCreate: boolean;
     maxWidth: number;
     updateDebounce: number;
     zIndex: number;
