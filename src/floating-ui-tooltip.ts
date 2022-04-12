@@ -47,19 +47,24 @@ const floatingUITooltip = async (
   const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE
 
   if(!target) return;
+
+  const toEnableAutoPlacement = passedPlacement === 'auto' && (newlyShown || resetPlacementOnUpdate);
+  const toEnableFlip = (passedPlacement !== 'auto' && toFlip);
+  const toEnableShift = toShift && newlyShown;
+
   const computePositionConfig = {
     middleware: [
       offset({
         mainAxis: passedOffset[0],
         crossAxis: passedOffset[1]
       }),
-      ...passedPlacement === 'auto' && (newlyShown || resetPlacementOnUpdate) ? [
+      ...toEnableAutoPlacement ? [
         autoPlacement(),
       ]: [],
-      ...toShift ? [
+      ...toEnableShift ? [
         shift({ padding: SCREEN_EDGE_MARGIN }),
       ]: [],
-      ...(passedPlacement !== 'auto' && toFlip) ? [
+      ...toEnableFlip ? [
         flip({
           fallbackPlacements: ['right', 'left'],
           fallbackStrategy: 'initialPlacement' // or `bestFit` (when no placement fits perfectly)

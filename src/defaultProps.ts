@@ -10,6 +10,7 @@ const defaultProps = {
   onClickOutside: (instance: Instance, event: MouseEvent) => {},
   onShow: (instance: Instance) => {},
   onHide: (instance: Instance) => {},
+  onRemove: () => {},
   placement: 'top',
   resetPlacementOnUpdate: false,
   hideOnTooltipEscape: true,

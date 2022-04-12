@@ -11,6 +11,7 @@
   border-radius: 6px;
   backface-visibility: hidden;
   font-size: 90%;
+  display: flex;
   max-width: calc(100vw - 10px);
   background: var(--color);
   box-shadow: 0 0 20px 4px rgba(154, 161, 177, 0.15),

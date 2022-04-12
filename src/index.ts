@@ -11,7 +11,6 @@ import { autoUpdate } from '@floating-ui/dom';
 // TODO: Implement props.maxWidth
 // NOTE: Should the tooltip be appended to the body?
 // -- https://web.archive.org/web/20210827084020/https://atfzl.com/don-t-attach-tooltips-to-document-body
-// TODO: Stop shifting along cross-axis on update
 
 const appendTo = () => document.body;
 
@@ -183,6 +182,7 @@ class Tooltip {
         this.debouncedUpdate as unknown as EventListenerOrEventListenerObject
       );
     });
+    this.props.onRemove();
   }
 }
 
@@ -194,7 +194,9 @@ async function createTooltip(
   const transitionDuration = props.transitionDuration || defaultProps.transitionDuration;
   // const offset = props.offset || defaultProps.offset;
   const offset = defaultProps.offset; // TODO: Remove this line
+  // offset needs to be size of the tooltip + backdrop gap (if applicable)
 
+  console.log(props.offset)
   const allProps: Props = {
     ...defaultProps,
     ...props,
