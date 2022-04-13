@@ -10,6 +10,7 @@ export interface Props {
     onClickOutside: (instance: Instance, event: MouseEvent) => void;
     onShow: (instance: Instance) => void;
     onHide: (instance: Instance) => void;
+    onStateChange: (oldState: TooltipState, newState: Partial<TooltipState>) => void;
     onRemove: () => void;
     placement: Placement;
     resetPlacementOnUpdate: boolean;
@@ -31,6 +32,7 @@ export interface TooltipState {
 export interface Instance {
     props: Props;
     reference: HTMLElement;
+    tooltipElement: HTMLElement;
     getState: () => TooltipState;
     show: () => void;
     hide: () => void;

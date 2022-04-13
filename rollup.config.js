@@ -31,6 +31,7 @@ function getConfig({ input, name, outputFile, tsconfig, packageJsonPath }) {
         input,
         external: [
             'tslib',
+            '@floating-ui/dom'
         ],
         output: {
             file: outputFile,

@@ -20,7 +20,7 @@ const appendTo = () => document.body;
 class Tooltip {
   readonly props: Props;
   readonly reference: HTMLElement;
-  private tooltipElement!: HTMLDivElement;
+  public tooltipElement!: HTMLDivElement;
   private state: TooltipState = {
     isShown: false,
     isRemoved: false,
@@ -124,6 +124,8 @@ class Tooltip {
       console.log('visibility changed')
     } */
 
+    this.props.onStateChange(this.state, newState);
+
     if (visibilityChanged && newState.isShown){
       const debouncedOnShow = debounce(this.props.onShow, 0);
       if(this.transitionDuration) {
@@ -220,6 +222,7 @@ async function createTooltip(
   const instance: Instance = {
     props: tooltipInstance.props,
     reference: tooltipInstance.reference,
+    tooltipElement: tooltipInstance.tooltipElement,
     getState: tooltipInstance.getState.bind(tooltipInstance),
     show: tooltipInstance.show.bind(tooltipInstance),
     hide: tooltipInstance.hide.bind(tooltipInstance),

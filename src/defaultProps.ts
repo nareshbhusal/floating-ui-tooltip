@@ -1,4 +1,4 @@
-import { Instance } from './types';
+import { Instance, TooltipState } from './types';
 
 const defaultProps = {
   allowHTML: true,
@@ -11,6 +11,7 @@ const defaultProps = {
   onClickOutside: (instance: Instance, event: MouseEvent) => {},
   onShow: (instance: Instance) => {},
   onHide: (instance: Instance) => {},
+  onStateChange: (oldState: TooltipState, newState: Partial<TooltipState>) => {},
   onRemove: () => {},
   placement: 'top',
   resetPlacementOnUpdate: false,

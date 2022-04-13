@@ -1,4 +1,4 @@
-import { Instance } from './types';
+import { Instance, TooltipState } from './types';
 declare const defaultProps: {
     allowHTML: boolean;
     content: string;
@@ -10,6 +10,7 @@ declare const defaultProps: {
     onClickOutside: (instance: Instance, event: MouseEvent) => void;
     onShow: (instance: Instance) => void;
     onHide: (instance: Instance) => void;
+    onStateChange: (oldState: TooltipState, newState: Partial<TooltipState>) => void;
     onRemove: () => void;
     placement: string;
     resetPlacementOnUpdate: boolean;
