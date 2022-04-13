@@ -19,6 +19,7 @@ export interface Props {
   hideOnTooltipEscape: boolean;
   hideOnReferenceHidden: boolean;
   showOnCreate: boolean;
+  scrollIntoView: boolean;
   maxWidth: number;
   arrowSizeScale: number;
   updateDebounce: number;
@@ -36,8 +37,8 @@ export interface Instance {
   props: Props;
   reference: HTMLElement;
   getState: () => TooltipState;
-  show: () => Promise<void>;
-  hide: () => Promise<void>;
-  remove: () => Promise<void>;
-  update: () => Promise<void>;
+  show: () => void;
+  hide: () => void;
+  remove: () => void;
+  update: () => void;
 }

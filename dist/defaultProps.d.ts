@@ -3,12 +3,14 @@ declare const defaultProps: {
     allowHTML: boolean;
     content: string;
     arrow: boolean;
+    scrollIntoView: boolean;
     transitionDuration: number[];
     offset: number[];
     hideOnClick: boolean;
     onClickOutside: (instance: Instance, event: MouseEvent) => void;
     onShow: (instance: Instance) => void;
     onHide: (instance: Instance) => void;
+    onRemove: () => void;
     placement: string;
     resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;

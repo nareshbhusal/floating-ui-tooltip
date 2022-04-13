@@ -42,3 +42,11 @@ export function onTransitionEnd(element: HTMLDivElement, callback: Function) {
     updateTransitionEndListener(<HTMLDivElement>element, 'remove', listener);
     updateTransitionEndListener(<HTMLDivElement>element, 'add', listener);
 }
+
+export function scrollElementIntoView(element: HTMLElement) {
+  element.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "center",
+  });
+}

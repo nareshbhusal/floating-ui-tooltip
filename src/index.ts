@@ -14,6 +14,9 @@ import { autoUpdate } from '@floating-ui/dom';
 
 const appendTo = () => document.body;
 
+// TODO: continual scrolling delays the update, for as long as you can keep scrolling, fix that
+
+
 class Tooltip {
   readonly props: Props;
   readonly reference: HTMLElement;
@@ -31,6 +34,7 @@ class Tooltip {
   constructor(props: Props, target: HTMLElement) {
     this.props = props;
     this.reference = target;
+    window['tp'] = this;
     addCSS();
   }
 
@@ -192,11 +196,17 @@ async function createTooltip(
 ): Promise<Instance> {
   const placement = props.placement || defaultProps.placement;
   const transitionDuration = props.transitionDuration || defaultProps.transitionDuration;
-  // const offset = props.offset || defaultProps.offset;
-  const offset = defaultProps.offset; // TODO: Remove this line
+  const offset = props.offset || defaultProps.offset;
   // offset needs to be size of the tooltip + backdrop gap (if applicable)
 
   console.log(props.offset)
+  // NOTE: Interesting that the properties with undefined values still won't be replaced...
+  // -- keep this in mind for Lusift too
+
+
+  // remove properties with value of undefined
+  Object.keys(props).forEach(key => props[key] === undefined && delete props[key])
+
   const allProps: Props = {
     ...defaultProps,
     ...props,

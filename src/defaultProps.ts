@@ -4,6 +4,7 @@ const defaultProps = {
   allowHTML: true,
   content: '',
   arrow: true,
+  scrollIntoView: false,
   transitionDuration: [300, 250],
   offset: [10, 0],
   hideOnClick: true, // `true` for anywhere outside the tooltip to hide it, 'target' for only when the target is clicked

@@ -10,11 +10,13 @@ export interface Props {
     onClickOutside: (instance: Instance, event: MouseEvent) => void;
     onShow: (instance: Instance) => void;
     onHide: (instance: Instance) => void;
+    onRemove: () => void;
     placement: Placement;
     resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;
     hideOnReferenceHidden: boolean;
     showOnCreate: boolean;
+    scrollIntoView: boolean;
     maxWidth: number;
     arrowSizeScale: number;
     updateDebounce: number;

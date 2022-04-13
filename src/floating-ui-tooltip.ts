@@ -10,6 +10,7 @@ import {
 } from '@floating-ui/dom';
 import { getChildren } from './tooltip-element';
 import { Props, TooltipState } from './types';
+import { scrollElementIntoView } from './utils';
 
 const SCREEN_EDGE_MARGIN = 16;
 const TIP_EDGE_MARGIN = 2;
@@ -40,7 +41,8 @@ const floatingUITooltip = async (
     hideOnTooltipEscape,
     arrowSizeScale,
     resetPlacementOnUpdate,
-    arrow: toShowArrow
+    arrow: toShowArrow,
+    scrollIntoView
   } = tooltipProps;
 
   const { box, content, arrow: arrowElement } = getChildren(tooltipElement);
@@ -92,6 +94,10 @@ const floatingUITooltip = async (
   const { x, y, placement, middlewareData } = fui;
 
   const { referenceHidden, escaped } = middlewareData.hide!;
+
+  if (referenceHidden && newlyShown) {
+    scrollElementIntoView(target);
+  }
 
   let arrowX,
   arrowY;
