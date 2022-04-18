@@ -22,6 +22,9 @@ const createTooltipElement = (instanceEnv): HTMLDivElement => {
   tooltipBox.appendChild(arrowElement);
   tooltipRoot.appendChild(tooltipBox);
 
+  Object.assign(tooltipContent.style, {
+    maxWidth: `${instanceEnv.props.maxWidth}px`
+  })
   tooltipContent.innerHTML = `
     <div id="tooltip-container">
     <h3>Default tooltip</h3>

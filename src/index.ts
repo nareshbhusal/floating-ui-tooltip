@@ -7,7 +7,6 @@ import debounce from './debounce';
 import { autoUpdate } from '@floating-ui/dom';
 
 // TODO: Ability to import js bundle without the css
-// TODO: Implement props.maxWidth
 // NOTE: Should the tooltip be appended to the body?
 // -- https://web.archive.org/web/20210827084020/https://atfzl.com/don-t-attach-tooltips-to-document-body
 
