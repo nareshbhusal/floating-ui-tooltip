@@ -29,6 +29,8 @@ export interface TooltipState {
     isRemoved: boolean;
     fui: ComputePositionReturn | undefined;
 }
+export declare type Visibility = 'hidden' | 'visible';
+export declare type TransitionState = 'hidden' | 'shown' | 'hiding' | 'showing';
 export interface Instance {
     props: Props;
     reference: HTMLElement;

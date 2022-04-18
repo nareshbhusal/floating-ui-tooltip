@@ -9,8 +9,9 @@ import {
   hide,
 } from '@floating-ui/dom';
 import { getChildren } from './tooltip-element';
-import { Props, TooltipState } from './types';
+import { Props, TooltipState, Visibility } from './types';
 import { scrollElementIntoView } from './utils';
+import setTooltipVisibility from './setTooltipVisibility';
 
 const SCREEN_EDGE_MARGIN = 16;
 const TIP_EDGE_MARGIN = 2;
@@ -42,7 +43,8 @@ const floatingUITooltip = async (
     arrowSizeScale,
     resetPlacementOnUpdate,
     arrow: toShowArrow,
-    scrollIntoView
+    scrollIntoView,
+    showOnCreate
   } = tooltipProps;
 
   const { box, content, arrow: arrowElement } = getChildren(tooltipElement);
@@ -107,16 +109,20 @@ const floatingUITooltip = async (
   }
   const arrowOffCenter = middlewareData.arrow!.centerOffset !== 0;
 
-  const visibility = ((
+  let visibility: Visibility = ((
     hideOnReferenceHidden && referenceHidden)
     || (hideOnTooltipEscape && escaped)
-    || toHide) ? 'hidden' : 'visible';
+    || toHide) ? 'hidden' : 'visible' as const;
 
-  tooltipElement.setAttribute('data-state', visibility);
+  if (visibility === 'visible' && newlyShown && !showOnCreate){
+    visibility = 'hidden' as const;
+  }
+  /* console.log(hideOnReferenceHidden && referenceHidden, hideOnTooltipEscape && escaped, toHide)
+  console.log(visibility); */
 
+  setTooltipVisibility(<HTMLDivElement>tooltipElement, visibility);
 
   Object.assign(tooltipElement.style, {
-    visibility,
     left: `${x}px`,
     top: `${y}px`
   });
@@ -160,13 +166,7 @@ const floatingUITooltip = async (
     [staticSide]: `-${TIP_SIZE*staticSideTipSizeMultiplier}px`
   });
 
-  if (newlyShown) {
-    console.log('setting state after newlyShown')
-  } else {
-    console.log('setting state on update')
-  }
   setState({
-    isShown: visibility === 'visible',
     fui
   });
 

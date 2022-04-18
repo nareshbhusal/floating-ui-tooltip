@@ -1,3 +1,4 @@
+import { Visibility, TransitionState } from './types';
 
 export function doesElementHasTransition(element: HTMLElement): boolean {
     function getCSSPropertyValue(element: HTMLElement, property: string): string {
@@ -17,8 +18,6 @@ export function updateTransitionEndListener(
   | 'addEventListener'
   | 'removeEventListener';
 
-  // some browsers apparently support `transition` (unprefixed) but only fire
-  // `webkitTransitionEnd`...
   [
     'transitionend',
     'webkitTransitionEnd',
@@ -28,19 +27,38 @@ export function updateTransitionEndListener(
   });
 }
 
+export function setTransitionState(element: HTMLDivElement, state: TransitionState) {
+  element.setAttribute('data-transition-state', state);
+  console.log('>> new transition state: '+state)
+}
+
+export function getTransitionState(element: HTMLDivElement): TransitionState {
+  return <TransitionState>element.getAttribute('data-transition-state');
+}
+
+export function setElementVisibility(tooltipElement: HTMLDivElement, newVisibilityState: Visibility) {
+
+  tooltipElement.setAttribute('data-state', newVisibilityState);
+  Object.assign(tooltipElement.style, {
+    visibility: newVisibilityState,
+  });
+}
+
 export function onTransitionEnd(element: HTMLDivElement, callback: Function) {
 
-    function listener(e) {
-      if(e.target === element) {
-        updateTransitionEndListener(<HTMLDivElement>element, 'remove', listener);
+  function listener(e) {
+    if(e.target === element) {
+      updateTransitionEndListener(<HTMLDivElement>element, 'remove', listener);
+      try {
         callback();
-        console.log("transition end for event "+ e);
+      } catch (err) {
+        console.error(err);
+        element['_instance'].props.onHide();
       }
     }
-    // TODO: Any way to get list of event listeners attached to an element?
-    // TODO: Any way to run the callback only once, because all of the events fire apprently
-    updateTransitionEndListener(<HTMLDivElement>element, 'remove', listener);
-    updateTransitionEndListener(<HTMLDivElement>element, 'add', listener);
+  }
+  updateTransitionEndListener(<HTMLDivElement>element, 'remove', listener);
+  updateTransitionEndListener(<HTMLDivElement>element, 'add', listener);
 }
 
 export function scrollElementIntoView(element: HTMLElement) {

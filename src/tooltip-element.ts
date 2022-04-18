@@ -1,10 +1,12 @@
+import { setTransitionState, setElementVisibility } from './utils';
+
 export const NODE_CLASSNAME_PREFIX = 'floating-ui-tooltip';
 
 export function div(): HTMLDivElement {
   return document.createElement('div');
 }
 
-const createTooltipElement = (): HTMLDivElement => {
+const createTooltipElement = (instanceEnv): HTMLDivElement => {
 
   const tooltipRoot = div();
   const tooltipBox = div();
@@ -27,12 +29,15 @@ const createTooltipElement = (): HTMLDivElement => {
   `;
 
   tooltipBox.setAttribute('role', 'tooltip');
-  tooltipRoot.setAttribute('data-state', '');
+  setElementVisibility(tooltipRoot, 'hidden');
+  setTransitionState(tooltipRoot, 'hidden');
+
   Object.assign(tooltipRoot.style, {
     visibility: 'hidden',
     left: `0px`,
     top: `0px`
   });
+  tooltipRoot['_instance'] = instanceEnv;
   return tooltipRoot;
 }
 

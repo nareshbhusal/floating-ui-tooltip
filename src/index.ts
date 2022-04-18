@@ -4,7 +4,6 @@ import { Props, TooltipState, Instance } from './types';
 import floatingUITooltip from './floating-ui-tooltip';
 import defaultProps from './defaultProps';
 import debounce from './debounce';
-import { doesElementHasTransition, onTransitionEnd } from './utils';
 import { autoUpdate } from '@floating-ui/dom';
 
 // TODO: Ability to import js bundle without the css
@@ -13,9 +12,6 @@ import { autoUpdate } from '@floating-ui/dom';
 // -- https://web.archive.org/web/20210827084020/https://atfzl.com/don-t-attach-tooltips-to-document-body
 
 const appendTo = () => document.body;
-
-// TODO: continual scrolling delays the update, for as long as you can keep scrolling, fix that
-
 
 class Tooltip {
   readonly props: Props;
@@ -26,7 +22,7 @@ class Tooltip {
     isRemoved: false,
     fui: undefined
   }
-  private autoUpdateCleanup!: () => void;
+  private updateListenerCleanup: () => void = () => {};
   private toHideTooltip: boolean = false;
   private debouncedUpdate!: (arg: boolean | undefined) => void;
   private transitionDuration: number = 0;
@@ -34,8 +30,9 @@ class Tooltip {
   constructor(props: Props, target: HTMLElement) {
     this.props = props;
     this.reference = target;
-    window['tp'] = this;
+    // window['tp'] = this;
     addCSS();
+    this.toHideTooltip = !this.props.showOnCreate;
   }
 
   private hookEventListeners() {
@@ -43,18 +40,35 @@ class Tooltip {
       this.update.bind(this),
       this.props.updateDebounce
     );
-    this.autoUpdateCleanup = autoUpdate(
+    const autoUpdateCleanup = autoUpdate(
       this.reference,
       this.tooltipElement,
-      () => this.debouncedUpdate(undefined)
+      () => this.debouncedUpdate(undefined),
     );
+
+    const debouncedUpdateHandler = () =>
+      this.debouncedUpdate(undefined) as unknown as EventListenerOrEventListenerObject;
+
     this.props.updateOnEvents.split(' ').forEach(event => {
       window.addEventListener(
         <keyof WindowEventMap>event,
-        () => this.debouncedUpdate(undefined) as unknown as EventListenerOrEventListenerObject
+        debouncedUpdateHandler
       );
     });
     window.addEventListener('click', this.clickHandler.bind(this));
+
+    // prepare event listeners' cleanup method
+    this.updateListenerCleanup = () => {
+      autoUpdateCleanup();
+      window.removeEventListener('click', this.clickHandler.bind(this));
+
+      this.props.updateOnEvents.split(' ').forEach(event => {
+        window.removeEventListener(
+          <keyof WindowEventMap>event,
+          debouncedUpdateHandler
+        );
+      });
+    }
   }
 
   private clickHandler = (event: MouseEvent) => {
@@ -86,8 +100,10 @@ class Tooltip {
 
   public async create() {
     const toHide = !this.props.showOnCreate;
-    this.tooltipElement = createTooltipElement();
-    this.updateTransitionDuration(this.props.transitionDuration[0]);
+    this.tooltipElement = createTooltipElement(this);
+    this.updateTransitionDuration(
+      this.props.transitionDuration[toHide ? 0 : 1]
+    );
     const { content: contentBox } = getChildren(this.tooltipElement);
     const { allowHTML, content } = this.props;
     if (allowHTML) {
@@ -106,8 +122,6 @@ class Tooltip {
       this.setState.bind(this),
     );
     this.hookEventListeners();
-    /* console.log(this.props.onShow)
-    console.log(this.state.isShown) */
   }
 
   public getState(): TooltipState {
@@ -118,32 +132,17 @@ class Tooltip {
     const visibilityChanged = typeof newState.isShown !== 'undefined' &&
       newState.isShown !== this.state.isShown;
 
-    /* if(!visibilityChanged){
-      console.log('visibility not changed')
-    } else {
-      console.log('visibility changed')
-    } */
+    if (visibilityChanged) {
+      this.updateTransitionDuration(
+        this.props.transitionDuration[newState.isShown ? 1 : 0]
+      );
+    }
 
     this.props.onStateChange(this.state, newState);
-
-    if (visibilityChanged && newState.isShown){
-      const debouncedOnShow = debounce(this.props.onShow, 0);
-      if(this.transitionDuration) {
-        onTransitionEnd(this.tooltipElement, () => {
-          debouncedOnShow(this);
-        });
-      } else {
-        debouncedOnShow(this);
-      }
-    }
 
     this.state = {
       ...this.state,
       ...newState
-    }
-
-    if(visibilityChanged && !newState.isShown) {
-      this.props.onHide(this);
     }
   }
 
@@ -158,19 +157,17 @@ class Tooltip {
       this.setState.bind(this)
     );
   }
+
   public async hide() {
     // hide() when tooltip is already hidden should prevent event listeners
     // from showing tooltip without before running show() manually
     this.toHideTooltip = true;
     await this.update(true);
-    this.updateTransitionDuration(this.props.transitionDuration[0]);
   }
 
   public async show() {
-    // this.props.onShow(this);
     this.toHideTooltip = false;
     await this.update(false);
-    this.updateTransitionDuration(this.props.transitionDuration[1]);
   }
 
   public remove() {
@@ -180,14 +177,8 @@ class Tooltip {
       isRemoved: true,
       fui: undefined
     }
-    this.autoUpdateCleanup();
-    window.removeEventListener('click', this.clickHandler.bind(this));
-    this.props.updateOnEvents.split(' ').forEach(event => {
-      window.removeEventListener(
-        <keyof WindowEventMap>event,
-        this.debouncedUpdate as unknown as EventListenerOrEventListenerObject
-      );
-    });
+    this.updateListenerCleanup();
+    console.log('removed all event listeners and observers');
     this.props.onRemove();
   }
 }
@@ -199,12 +190,9 @@ async function createTooltip(
   const placement = props.placement || defaultProps.placement;
   const transitionDuration = props.transitionDuration || defaultProps.transitionDuration;
   const offset = props.offset || defaultProps.offset;
-  // offset needs to be size of the tooltip + backdrop gap (if applicable)
 
-  console.log(props.offset)
   // NOTE: Interesting that the properties with undefined values still won't be replaced...
-  // -- keep this in mind for Lusift too
-
+  // -- Relevant to Lusift?
 
   // remove properties with value of undefined
   Object.keys(props).forEach(key => props[key] === undefined && delete props[key])
