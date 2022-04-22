@@ -36,6 +36,7 @@ const createTooltipElement = (instanceEnv): HTMLDivElement => {
   setTransitionState(tooltipRoot, 'hidden');
 
   Object.assign(tooltipRoot.style, {
+    zIndex: instanceEnv.props.zIndex,
     visibility: 'hidden',
     left: `0px`,
     top: `0px`

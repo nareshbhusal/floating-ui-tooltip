@@ -9,6 +9,7 @@ function setTooltipVisibilityState(tooltipElement: HTMLDivElement, visibility: V
 }
 
 // TODO: Any way to preserve the latest caught method call and to plug it at the end in onTransitionEnd callback?
+// -- [IMPORTANT]
 
 export default function setTooltipVisibility(tooltipElement: HTMLDivElement, newVisibilityState: VisibilityState) {
   const instance = tooltipElement['_instance'];
