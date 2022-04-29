@@ -9,7 +9,7 @@ import {
   hide,
 } from '@floating-ui/dom';
 import { getChildren } from './tooltip-element';
-import { Props, TooltipState, Visibility } from './types';
+import { Props, TooltipState, Visibility, Placement, Position } from './types';
 import { scrollElementIntoView } from './utils';
 import setTooltipVisibility from './setTooltipVisibility';
 
@@ -25,6 +25,21 @@ const TIP_SIDES_MAP = {
   left: "right"
 };
 
+const getPosition = ({ passedPlacement, fui }): Position => {
+  const {
+    position,
+    orientation
+  } = passedPlacement;
+  if (!fui) return position;
+  const { x, y } = fui;
+  if (position !== 'auto' && (x < 0 || y < 0)) {
+    if (orientation === 'auto') {
+      return 'auto';
+    }
+  }
+  return position;
+}
+
 const floatingUITooltip = async (
   tooltipProps: Props,
   tooltipElement: HTMLElement,
@@ -35,7 +50,7 @@ const floatingUITooltip = async (
 ) => {
  const { toFlip=false, toShift=true } = {};
 
-  const {
+  let {
     placement: passedPlacement,
     hideOnReferenceHidden,
     offset: passedOffset,
@@ -47,16 +62,29 @@ const floatingUITooltip = async (
     showOnCreate
   } = tooltipProps;
 
-  const { box, content, arrow: arrowElement } = getChildren(tooltipElement);
-  const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE
+  const { arrow: arrowElement } = getChildren(tooltipElement);
+  const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE;
+
 
   if(!target) return;
 
-  const toEnableAutoPlacement = passedPlacement === 'auto' && (newlyShown || resetPlacementOnUpdate);
-  const toEnableFlip = (passedPlacement !== 'auto' && toFlip);
+  const position = getPosition({
+    passedPlacement,
+    fui: tooltipElement['_instance'].state.fui
+  });
+
+  const toEnableAutoPlacement = position === 'auto' && (newlyShown || resetPlacementOnUpdate);
   const toEnableShift = toShift && newlyShown;
 
+  // TODO: we want to be able to take any placement including auto, and also
+  // orientation of `fixed` or `auto`
+  // -- if passedPlacement is other than auto, and orientation is auto
+  // -- -- if x or y is in negative, we make placement auto
+
   const computePositionConfig = {
+    ...position !== 'auto' && {
+      placement: position,
+    },
     middleware: [
       offset({
         mainAxis: passedOffset[0],
@@ -67,12 +95,6 @@ const floatingUITooltip = async (
       ]: [],
       ...toEnableShift ? [
         shift({ padding: SCREEN_EDGE_MARGIN }),
-      ]: [],
-      ...toEnableFlip ? [
-        flip({
-          fallbackPlacements: ['right', 'left'],
-          fallbackStrategy: 'initialPlacement' // or `bestFit` (when no placement fits perfectly)
-        })
       ]: [],
       ...toShowArrow ? [
         arrow({
@@ -88,16 +110,15 @@ const floatingUITooltip = async (
     ]
   }
 
-  if (passedPlacement !== 'auto') {
-    computePositionConfig['placement'] = passedPlacement;
-  }
+  console.log(`computePositionConfig`)
+  console.log(computePositionConfig);
 
   const fui = await computePosition(target, tooltipElement, computePositionConfig);
   const { x, y, placement, middlewareData } = fui;
 
   const { referenceHidden, escaped } = middlewareData.hide!;
 
-  if (referenceHidden && newlyShown) {
+  if (referenceHidden && newlyShown && scrollIntoView) {
     scrollElementIntoView(target);
   }
 

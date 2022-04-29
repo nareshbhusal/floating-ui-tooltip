@@ -10,6 +10,9 @@ function setTooltipVisibilityState(tooltipElement: HTMLDivElement, visibility: V
 
 // TODO: Any way to preserve the latest caught method call and to plug it at the end in onTransitionEnd callback?
 // -- [IMPORTANT]
+let LAST_VISIBILITY_STATE: VisibilityState | '' = '';
+// TODO: Maybe just try running this as a debounce method
+// -- debounce method runs the last call right?
 
 export default function setTooltipVisibility(tooltipElement: HTMLDivElement, newVisibilityState: VisibilityState) {
   const instance = tooltipElement['_instance'];
@@ -26,11 +29,14 @@ export default function setTooltipVisibility(tooltipElement: HTMLDivElement, new
 
     } else if (currentTransitionState === 'hidden') {
       console.log('showing')
+      LAST_VISIBILITY_STATE = '';
       setTransitionState(tooltipElement, 'showing');
       // proceed to show
 
     } else if (currentTransitionState === 'hiding') {
       console.log(`cancelling ${currentTransitionState}`)
+      LAST_VISIBILITY_STATE = newVisibilityState;
+      // NOTE: where should this be again?^
       return;
     }
   } else {
@@ -39,12 +45,14 @@ export default function setTooltipVisibility(tooltipElement: HTMLDivElement, new
       return;
 
     } else if (currentTransitionState === 'shown') {
+      LAST_VISIBILITY_STATE = '';
       setTransitionState(tooltipElement, 'hiding');
       instance.props.onHide(instance);
       // proceed to hide
 
     } else if (currentTransitionState === 'showing') {
       console.log(`cancelling ${currentTransitionState}`)
+      LAST_VISIBILITY_STATE = newVisibilityState;
       return;
     }
   }
@@ -56,6 +64,10 @@ export default function setTooltipVisibility(tooltipElement: HTMLDivElement, new
       setTransitionState(tooltipElement, newTransitionState);
 
       newVisibilityState === 'visible' && instance.props.onShow(instance);
+      /* if (LAST_VISIBILITY_STATE) {
+        console.log('LAST EVENT FIRED')
+        setTooltipVisibility(tooltipElement, LAST_VISIBILITY_STATE);
+      } */
     });
 
     setElementVisibility(tooltipElement, newVisibilityState);

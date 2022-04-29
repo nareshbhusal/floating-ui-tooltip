@@ -13,7 +13,10 @@ const defaultProps = {
   onHide: (instance: Instance) => {},
   onStateChange: (oldState: TooltipState, newState: Partial<TooltipState>) => {},
   onRemove: () => {},
-  placement: 'top',
+  placement: {
+    position: 'top',
+    orientation: 'fixed'
+  },
   resetPlacementOnUpdate: false,
   hideOnTooltipEscape: true,
   hideOnReferenceHidden: true,

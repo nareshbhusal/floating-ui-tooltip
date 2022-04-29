@@ -1,5 +1,10 @@
 import { Placement as FUIPlacement, ComputePositionReturn } from '@floating-ui/dom';
-export declare type Placement = FUIPlacement | 'auto';
+export declare type Position = FUIPlacement | 'auto';
+export declare type Orientation = 'fixed' | 'auto';
+export interface Placement {
+    position: Position;
+    orientation: Orientation;
+}
 export interface Props {
     allowHTML: boolean;
     content: string;

@@ -28,6 +28,7 @@ class Tooltip {
 
   constructor(props: Props, target: HTMLElement) {
     this.props = props;
+    // this.props.updateDebounce = 0; // test
     this.reference = target;
     // window['tp'] = this;
     addCSS();

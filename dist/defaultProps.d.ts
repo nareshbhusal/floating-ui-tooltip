@@ -12,7 +12,10 @@ declare const defaultProps: {
     onHide: (instance: Instance) => void;
     onStateChange: (oldState: TooltipState, newState: Partial<TooltipState>) => void;
     onRemove: () => void;
-    placement: string;
+    placement: {
+        position: string;
+        orientation: string;
+    };
     resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;
     hideOnReferenceHidden: boolean;
