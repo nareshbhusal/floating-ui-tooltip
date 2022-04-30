@@ -25,14 +25,16 @@ const TIP_SIDES_MAP = {
   left: "right"
 };
 
-const getPosition = ({ passedPlacement, fui }): Position => {
+// TODO: but this shouldn't change if it isn't newlyShown right?
+const getPosition = ({ passedPlacement, fui, newlyShown }): Position => {
   const {
     position,
     orientation
   } = passedPlacement;
-  if (!fui) return position;
+  if (!fui || !newlyShown) return position;
   const { x, y } = fui;
-  if (position !== 'auto' && (x < 0 || y < 0)) {
+  // if x or y is less than 0, and orientation is auto: return auto
+  if (x < 0 || y < 0) {
     if (orientation === 'auto') {
       return 'auto';
     }
@@ -40,46 +42,19 @@ const getPosition = ({ passedPlacement, fui }): Position => {
   return position;
 }
 
-const floatingUITooltip = async (
-  tooltipProps: Props,
-  tooltipElement: HTMLElement,
-  target: HTMLElement,
-  toHide: boolean,
-  newlyShown: boolean,
-  setState: (state: Partial<TooltipState>)=> void
-) => {
- const { toFlip=false, toShift=true } = {};
-
-  let {
-    placement: passedPlacement,
-    hideOnReferenceHidden,
-    offset: passedOffset,
-    hideOnTooltipEscape,
-    arrowSizeScale,
-    resetPlacementOnUpdate,
-    arrow: toShowArrow,
-    scrollIntoView,
-    showOnCreate
-  } = tooltipProps;
-
-  const { arrow: arrowElement } = getChildren(tooltipElement);
-  const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE;
-
-
-  if(!target) return;
+const computeTooltip = async ({ passedPlacement, passedOffset, resetPlacementOnUpdate, newlyShown, toShift, toShowArrow, arrowElement, tooltipElement, target }) => {
 
   const position = getPosition({
     passedPlacement,
-    fui: tooltipElement['_instance'].state.fui
+    fui: tooltipElement['_instance'].state.fui,
+    newlyShown
   });
+  console.log(`fui is:`)
+  console.log(tooltipElement['_instance'].state.fui)
+  console.log(`position now should be ${position}`)
 
   const toEnableAutoPlacement = position === 'auto' && (newlyShown || resetPlacementOnUpdate);
   const toEnableShift = toShift && newlyShown;
-
-  // TODO: we want to be able to take any placement including auto, and also
-  // orientation of `fixed` or `auto`
-  // -- if passedPlacement is other than auto, and orientation is auto
-  // -- -- if x or y is in negative, we make placement auto
 
   const computePositionConfig = {
     ...position !== 'auto' && {
@@ -109,11 +84,46 @@ const floatingUITooltip = async (
       hide()
     ]
   }
+  return await computePosition(target, tooltipElement, computePositionConfig);
+}
 
-  console.log(`computePositionConfig`)
-  console.log(computePositionConfig);
+const floatingUITooltip = async (
+  tooltipProps: Props,
+  tooltipElement: HTMLElement,
+  target: HTMLElement,
+  toHide: boolean,
+  newlyShown: boolean,
+  setState: (state: Partial<TooltipState>)=> void
+) => {
+ const { toFlip=false, toShift=true } = {};
 
-  const fui = await computePosition(target, tooltipElement, computePositionConfig);
+  let {
+    placement: passedPlacement,
+    hideOnReferenceHidden,
+    offset: passedOffset,
+    hideOnTooltipEscape,
+    arrowSizeScale,
+    resetPlacementOnUpdate,
+    arrow: toShowArrow,
+    scrollIntoView,
+    showOnCreate
+  } = tooltipProps;
+
+  const { arrow: arrowElement } = getChildren(tooltipElement);
+
+  if(!target) return;
+
+  let fui = await computeTooltip({ passedPlacement, passedOffset, resetPlacementOnUpdate, toShift, toShowArrow, arrowElement, tooltipElement, target, newlyShown });
+
+  if (newlyShown) {
+    console.log('---')
+    console.log('refiring computePosition because it\'s newlyshown')
+    fui = await computeTooltip({ passedPlacement, passedOffset, resetPlacementOnUpdate, toShift, toShowArrow, arrowElement, tooltipElement, target, newlyShown });
+    console.log(`fui is:`)
+    console.log(tooltipElement['_instance'].state.fui)
+    console.log('---')
+  }
+
   const { x, y, placement, middlewareData } = fui;
 
   const { referenceHidden, escaped } = middlewareData.hide!;
@@ -135,6 +145,8 @@ const floatingUITooltip = async (
     || (hideOnTooltipEscape && escaped)
     || toHide) ? 'hidden' : 'visible' as const;
 
+  console.log(`to change visibility to: ${visibility}`)
+
   if (visibility === 'visible' && newlyShown && !showOnCreate){
     visibility = 'hidden' as const;
   }
@@ -147,6 +159,8 @@ const floatingUITooltip = async (
     left: `${x}px`,
     top: `${y}px`
   });
+
+  const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE;
 
   const staticSide = TIP_SIDES_MAP[placement.split("-")[0]];
   let staticSideTipSizeMultiplier: string | number = 0;

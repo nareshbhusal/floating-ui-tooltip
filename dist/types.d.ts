@@ -17,6 +17,7 @@ export interface Props {
     onHide: (instance: Instance) => void;
     onStateChange: (oldState: TooltipState, newState: Partial<TooltipState>) => void;
     onRemove: () => void;
+    onBeforeFirstRender: () => void;
     placement: Placement;
     resetPlacementOnUpdate: boolean;
     hideOnTooltipEscape: boolean;

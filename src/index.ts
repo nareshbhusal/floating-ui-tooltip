@@ -98,6 +98,8 @@ class Tooltip {
     this.tooltipElement.style.transitionDuration = `${duration}ms`;
   }
 
+  // TODO: we'll need to decouple creation of dom element and first run of fui
+  // for the Lusift consumer
   public async create() {
     const toHide = !this.props.showOnCreate;
     this.tooltipElement = createTooltipElement(this);
@@ -113,15 +115,21 @@ class Tooltip {
     }
 
     appendTo().appendChild(this.tooltipElement);
-    await floatingUITooltip(
-      this.props,
-      this.tooltipElement,
-      this.reference,
-      toHide,
-      true,
-      this.setState.bind(this),
-    );
-    this.hookEventListeners();
+
+    const initFloatingUI = async () => {
+      await floatingUITooltip(
+        this.props,
+        this.tooltipElement,
+        this.reference,
+        toHide,
+        true,
+        this.setState.bind(this),
+      );
+      this.hookEventListeners();
+    }
+    // TODO: onBeforeFirstRender()
+    this.props.onBeforeFirstRender();
+    await initFloatingUI();
   }
 
   public getState(): TooltipState {
