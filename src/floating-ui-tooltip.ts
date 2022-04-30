@@ -25,33 +25,126 @@ const TIP_SIDES_MAP = {
   left: "right"
 };
 
-// TODO: but this shouldn't change if it isn't newlyShown right?
-const getPosition = ({ passedPlacement, fui, newlyShown }): Position => {
+const isElementOverflowingDocument = (element) => {
+  const elementRect = element.getBoundingClientRect();
+  const documentRect = document.documentElement.getBoundingClientRect();
+  return elementRect.top < documentRect.top ||
+    elementRect.bottom > documentRect.bottom ||
+    elementRect.left < documentRect.left ||
+    elementRect.right > documentRect.right;
+}
+
+const getPosition = ({ passedPlacement, tooltipElement, toResetPosition }): Position => {
   const {
-    position,
     orientation
   } = passedPlacement;
-  if (!fui || !newlyShown) return position;
-  const { x, y } = fui;
-  // if x or y is less than 0, and orientation is auto: return auto
-  if (x < 0 || y < 0) {
+
+  const currentPosition = tooltipElement['_instance'].state.fui?.placement;
+  if (!currentPosition){
+    return passedPlacement.position;
+  }
+
+  console.log(`toResetPosition: ${toResetPosition}`);
+
+  // window.alert(`${toResetPosition}, ${isElementOverflowingDocument(tooltipElement)}, ${newlyShown}`);
+  if (!toResetPosition) return currentPosition;
+  if (isElementOverflowingDocument(tooltipElement)) {
+    console.log('tooltip overflown')
     if (orientation === 'auto') {
       return 'auto';
     }
+  } else {
+    console.log('tooltip not overflown')
   }
-  return position;
+  return currentPosition;
 }
 
-const computeTooltip = async ({ passedPlacement, passedOffset, resetPlacementOnUpdate, newlyShown, toShift, toShowArrow, arrowElement, tooltipElement, target }) => {
+const renderTooltip = ({ fui, newlyShown, scrollIntoView, hideOnReferenceHidden, hideOnTooltipEscape, tooltipElement, arrowElement, target, toHide, showOnCreate, arrowSizeScale }) => {
+  const { x, y, placement, middlewareData } = fui;
+
+  const { referenceHidden, escaped } = middlewareData.hide!;
+
+  if (referenceHidden && newlyShown && scrollIntoView) {
+    scrollElementIntoView(target);
+  }
+
+  let arrowX,
+  arrowY;
+  if(middlewareData.arrow){
+    arrowX = middlewareData.arrow.x;
+    arrowY = middlewareData.arrow.y;
+  }
+  const arrowOffCenter = middlewareData.arrow!.centerOffset !== 0;
+
+  let visibility: Visibility = ((
+    hideOnReferenceHidden && referenceHidden)
+    || (hideOnTooltipEscape && escaped)
+    || toHide) ? 'hidden' : 'visible' as const;
+
+    console.log(`to change visibility to: ${visibility}`)
+
+    if (visibility === 'visible' && newlyShown && !showOnCreate){
+      visibility = 'hidden' as const;
+    }
+    /* console.log(hideOnReferenceHidden && referenceHidden, hideOnTooltipEscape && escaped, toHide)
+       console.log(visibility); */
+
+    setTooltipVisibility(<HTMLDivElement>tooltipElement, visibility);
+
+    Object.assign(tooltipElement.style, {
+      left: `${x}px`,
+      top: `${y}px`
+    });
+
+    const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE;
+
+    const staticSide = TIP_SIDES_MAP[placement.split("-")[0]];
+    let staticSideTipSizeMultiplier: string | number = 0;
+    let top: string | number = 0;
+    let left: string | number = 0;
+    left = arrowX !== null ? `${arrowX + (TIP_SIZE)}px` : "";
+
+    switch(staticSide) {
+      case 'top':
+        staticSideTipSizeMultiplier = 1/1.7;
+      left = arrowX !== null ? `${arrowX + (TIP_SIZE*staticSideTipSizeMultiplier)}px` : "";
+      break;
+      case 'bottom':
+        staticSideTipSizeMultiplier = 1/2;
+      left = arrowX !== null ? `${arrowX + (TIP_SIZE*staticSideTipSizeMultiplier)}px` : "";
+      break;
+      case 'left':
+        staticSideTipSizeMultiplier = 0.005;
+      left = arrowX !== null ? `${arrowX}px` : "",
+      top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
+      break;
+      case 'right':
+        staticSideTipSizeMultiplier = 1.2;
+      left = arrowX !== null ? `${arrowX}px` : "",
+      top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
+      break;
+    }
+
+    top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
+
+    top = arrowY !== null ? `${arrowY}px` : "";
+    Object.assign(arrowElement.style, {
+      visibility: arrowOffCenter ? 'hidden' : 'visible',
+      left,
+      top,
+      right: "",
+      bottom: "",
+      [staticSide]: `-${TIP_SIZE*staticSideTipSizeMultiplier}px`
+    });
+}
+
+const computeTooltip = async ({ passedPlacement, toResetPosition, passedOffset, resetPlacementOnUpdate, newlyShown, toShift, toShowArrow, arrowElement, tooltipElement, target }) => {
 
   const position = getPosition({
     passedPlacement,
-    fui: tooltipElement['_instance'].state.fui,
-    newlyShown
+    tooltipElement,
+    toResetPosition
   });
-  console.log(`fui is:`)
-  console.log(tooltipElement['_instance'].state.fui)
-  console.log(`position now should be ${position}`)
 
   const toEnableAutoPlacement = position === 'auto' && (newlyShown || resetPlacementOnUpdate);
   const toEnableShift = toShift && newlyShown;
@@ -92,10 +185,12 @@ const floatingUITooltip = async (
   tooltipElement: HTMLElement,
   target: HTMLElement,
   toHide: boolean,
-  newlyShown: boolean,
+  toResetPosition: boolean | undefined,
   setState: (state: Partial<TooltipState>)=> void
 ) => {
  const { toFlip=false, toShift=true } = {};
+
+ // window.alert(newlyShown)
 
   let {
     placement: passedPlacement,
@@ -110,100 +205,17 @@ const floatingUITooltip = async (
   } = tooltipProps;
 
   const { arrow: arrowElement } = getChildren(tooltipElement);
+  const newlyShown = !tooltipElement['_instance'].getState().fui;
 
+  // TODO: so target resolves to false on first run of this module
   if(!target) return;
+  tooltipElement.style.visibility = 'visible';
 
-  let fui = await computeTooltip({ passedPlacement, passedOffset, resetPlacementOnUpdate, toShift, toShowArrow, arrowElement, tooltipElement, target, newlyShown });
-
-  if (newlyShown) {
-    console.log('---')
-    console.log('refiring computePosition because it\'s newlyshown')
-    fui = await computeTooltip({ passedPlacement, passedOffset, resetPlacementOnUpdate, toShift, toShowArrow, arrowElement, tooltipElement, target, newlyShown });
-    console.log(`fui is:`)
-    console.log(tooltipElement['_instance'].state.fui)
-    console.log('---')
-  }
-
-  const { x, y, placement, middlewareData } = fui;
-
-  const { referenceHidden, escaped } = middlewareData.hide!;
-
-  if (referenceHidden && newlyShown && scrollIntoView) {
-    scrollElementIntoView(target);
-  }
-
-  let arrowX,
-  arrowY;
-  if(middlewareData.arrow){
-    arrowX = middlewareData.arrow.x;
-    arrowY = middlewareData.arrow.y;
-  }
-  const arrowOffCenter = middlewareData.arrow!.centerOffset !== 0;
-
-  let visibility: Visibility = ((
-    hideOnReferenceHidden && referenceHidden)
-    || (hideOnTooltipEscape && escaped)
-    || toHide) ? 'hidden' : 'visible' as const;
-
-  console.log(`to change visibility to: ${visibility}`)
-
-  if (visibility === 'visible' && newlyShown && !showOnCreate){
-    visibility = 'hidden' as const;
-  }
-  /* console.log(hideOnReferenceHidden && referenceHidden, hideOnTooltipEscape && escaped, toHide)
-  console.log(visibility); */
-
-  setTooltipVisibility(<HTMLDivElement>tooltipElement, visibility);
-
-  Object.assign(tooltipElement.style, {
-    left: `${x}px`,
-    top: `${y}px`
-  });
-
-  const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE;
-
-  const staticSide = TIP_SIDES_MAP[placement.split("-")[0]];
-  let staticSideTipSizeMultiplier: string | number = 0;
-  let top: string | number = 0;
-  let left: string | number = 0;
-  left = arrowX !== null ? `${arrowX + (TIP_SIZE)}px` : "";
-
-  switch(staticSide) {
-    case 'top':
-      staticSideTipSizeMultiplier = 1/1.7;
-      left = arrowX !== null ? `${arrowX + (TIP_SIZE*staticSideTipSizeMultiplier)}px` : "";
-    break;
-    case 'bottom':
-      staticSideTipSizeMultiplier = 1/2;
-      left = arrowX !== null ? `${arrowX + (TIP_SIZE*staticSideTipSizeMultiplier)}px` : "";
-    break;
-    case 'left':
-      staticSideTipSizeMultiplier = 0.005;
-      left = arrowX !== null ? `${arrowX}px` : "",
-      top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
-    break;
-    case 'right':
-      staticSideTipSizeMultiplier = 1.2;
-      left = arrowX !== null ? `${arrowX}px` : "",
-      top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
-    break;
-  }
-
-  top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
-
-  top = arrowY !== null ? `${arrowY}px` : "";
-  Object.assign(arrowElement.style, {
-    visibility: arrowOffCenter ? 'hidden' : 'visible',
-    left,
-    top,
-    right: "",
-    bottom: "",
-    [staticSide]: `-${TIP_SIZE*staticSideTipSizeMultiplier}px`
-  });
-
+  let fui = await computeTooltip({ passedPlacement, toResetPosition, passedOffset, resetPlacementOnUpdate, toShift, toShowArrow, arrowElement, tooltipElement, target, newlyShown });
+  renderTooltip({ fui, newlyShown, scrollIntoView, hideOnReferenceHidden, hideOnTooltipEscape, tooltipElement, arrowElement, target, toHide, showOnCreate, arrowSizeScale });
   setState({
     fui
-  });
+  })
 
   return fui;
 }

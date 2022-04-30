@@ -13,6 +13,7 @@ declare const defaultProps: {
     onStateChange: (oldState: TooltipState, newState: Partial<TooltipState>) => void;
     onRemove: () => void;
     onBeforeFirstRender: () => void;
+    onAfterFirstRender: () => void;
     placement: {
         position: string;
         orientation: string;

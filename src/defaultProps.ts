@@ -14,6 +14,7 @@ const defaultProps = {
   onStateChange: (oldState: TooltipState, newState: Partial<TooltipState>) => {},
   onRemove: () => {},
   onBeforeFirstRender: () => {},
+  onAfterFirstRender: () => {},
   placement: {
     position: 'top',
     orientation: 'fixed'

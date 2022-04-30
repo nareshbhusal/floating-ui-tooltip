@@ -1,6 +1,6 @@
 import createTooltipElement, { getChildren } from './tooltip-element';
 import addCSS from './addCSS';
-import { Props, TooltipState, Instance } from './types';
+import { Props, TooltipState, Instance, EndPosition } from './types';
 import floatingUITooltip from './floating-ui-tooltip';
 import defaultProps from './defaultProps';
 import debounce from './debounce';
@@ -19,18 +19,20 @@ class Tooltip {
   private state: TooltipState = {
     isShown: false,
     isRemoved: false,
+    position: undefined,
     fui: undefined
   }
   private updateListenerCleanup: () => void = () => {};
   private toHideTooltip: boolean = false;
   private debouncedUpdate!: (arg: boolean | undefined) => void;
   private transitionDuration: number = 0;
+  private position!: EndPosition;
 
   constructor(props: Props, target: HTMLElement) {
     this.props = props;
     // this.props.updateDebounce = 0; // test
     this.reference = target;
-    // window['tp'] = this;
+    window['tp'] = this;
     addCSS();
     this.toHideTooltip = !this.props.showOnCreate;
   }
@@ -98,8 +100,6 @@ class Tooltip {
     this.tooltipElement.style.transitionDuration = `${duration}ms`;
   }
 
-  // TODO: we'll need to decouple creation of dom element and first run of fui
-  // for the Lusift consumer
   public async create() {
     const toHide = !this.props.showOnCreate;
     this.tooltipElement = createTooltipElement(this);
@@ -115,6 +115,7 @@ class Tooltip {
     }
 
     appendTo().appendChild(this.tooltipElement);
+    this.props.onBeforeFirstRender();
 
     const initFloatingUI = async () => {
       await floatingUITooltip(
@@ -125,11 +126,20 @@ class Tooltip {
         true,
         this.setState.bind(this),
       );
+      await this.update(false, true);
+      await this.update(false, true);
       this.hookEventListeners();
     }
-    // TODO: onBeforeFirstRender()
-    this.props.onBeforeFirstRender();
+    // TODO: Maybe remove newlyShown thing and replace with a check for state.fui?
+    // -- after first run of fui, the tooltip element is in a weird stage
+    // where it's arrow is not in the middle center but end of the tooltip
+    // TODO: the boundingClientRect having this weird stage:
+    // -- see when those change in the code by logging
+    // -- get some sort of snapshot of the dom during that weird stage
     await initFloatingUI();
+    // await this.show(true);
+    // this.props.onAfterFirstRender();
+    console.log('AT THE END OF CREATE', this.state);
   }
 
   public getState(): TooltipState {
@@ -154,14 +164,14 @@ class Tooltip {
     }
   }
 
-  public async update(toHide?: boolean) {
+  public async update(toHide?: boolean, toResetPosition?: boolean) {
     toHide = toHide || this.toHideTooltip || false;
     await floatingUITooltip(
       this.props,
       this.tooltipElement,
       this.reference,
       toHide,
-      false,
+      toResetPosition,
       this.setState.bind(this)
     );
   }
@@ -173,7 +183,9 @@ class Tooltip {
     await this.update(true);
   }
 
+  // TODO: add parameter resetPosition
   public async show() {
+    // console.log(`show() ran with resetPosition: ${resetPosition}`);
     this.toHideTooltip = false;
     await this.update(false);
   }
@@ -183,6 +195,7 @@ class Tooltip {
     this.state = {
       isShown: false,
       isRemoved: true,
+      position: undefined,
       fui: undefined
     }
     this.updateListenerCleanup();
