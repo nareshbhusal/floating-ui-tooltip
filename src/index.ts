@@ -1,14 +1,14 @@
 import createTooltipElement, { getChildren } from './tooltip-element';
 import addCSS from './addCSS';
-import { Props, TooltipState, Instance, EndPosition } from './types';
+import { Props, TooltipState, Instance } from './types';
 import floatingUITooltip from './floating-ui-tooltip';
 import defaultProps from './defaultProps';
+import { scrollElementIntoView } from './utils';
 import debounce from './debounce';
 import { autoUpdate } from '@floating-ui/dom';
 
 // TODO: Ability to import js bundle without the css
-// NOTE: Should the tooltip be appended to the body?
-// -- https://web.archive.org/web/20210827084020/https://atfzl.com/don-t-attach-tooltips-to-document-body
+// TODO: Add ability to pass dom element as content
 
 const appendTo = () => document.body;
 
@@ -19,14 +19,12 @@ class Tooltip {
   private state: TooltipState = {
     isShown: false,
     isRemoved: false,
-    position: undefined,
     fui: undefined
   }
   private updateListenerCleanup: () => void = () => {};
   private toHideTooltip: boolean = false;
   private debouncedUpdate!: (arg: boolean | undefined) => void;
   private transitionDuration: number = 0;
-  private position!: EndPosition;
 
   constructor(props: Props, target: HTMLElement) {
     this.props = props;
@@ -101,17 +99,22 @@ class Tooltip {
   }
 
   public async create() {
-    const toHide = !this.props.showOnCreate;
     this.tooltipElement = createTooltipElement(this);
     this.updateTransitionDuration(
-      this.props.transitionDuration[toHide ? 0 : 1]
+      this.props.transitionDuration[this.toHideTooltip ? 0 : 1]
     );
     const { content: contentBox } = getChildren(this.tooltipElement);
     const { allowHTML, content } = this.props;
     if (allowHTML) {
-      contentBox.innerHTML = content;
+      if (content instanceof Element) {
+        contentBox.appendChild(content);
+      } else {
+        contentBox.innerHTML = content;
+      }
     } else {
-      contentBox.innerText = `${content}`;
+      if (!(content instanceof Element)) {
+        contentBox.innerText = content;
+      }
     }
 
     appendTo().appendChild(this.tooltipElement);
@@ -122,7 +125,7 @@ class Tooltip {
         this.props,
         this.tooltipElement,
         this.reference,
-        toHide,
+        this.toHideTooltip,
         true,
         this.setState.bind(this),
       );
@@ -130,16 +133,13 @@ class Tooltip {
       await this.update(false, true);
       this.hookEventListeners();
     }
-    // TODO: Maybe remove newlyShown thing and replace with a check for state.fui?
-    // -- after first run of fui, the tooltip element is in a weird stage
-    // where it's arrow is not in the middle center but end of the tooltip
-    // TODO: the boundingClientRect having this weird stage:
-    // -- see when those change in the code by logging
-    // -- get some sort of snapshot of the dom during that weird stage
     await initFloatingUI();
-    // await this.show(true);
-    // this.props.onAfterFirstRender();
-    console.log('AT THE END OF CREATE', this.state);
+    if(this.props.showOnCreate){
+      await this.show();
+    } else {
+      await this.hide();
+    }
+    this.props.onAfterFirstRender();
   }
 
   public getState(): TooltipState {
@@ -183,7 +183,6 @@ class Tooltip {
     await this.update(true);
   }
 
-  // TODO: add parameter resetPosition
   public async show() {
     // console.log(`show() ran with resetPosition: ${resetPosition}`);
     this.toHideTooltip = false;
@@ -195,13 +194,22 @@ class Tooltip {
     this.state = {
       isShown: false,
       isRemoved: true,
-      position: undefined,
       fui: undefined
     }
     this.updateListenerCleanup();
     console.log('removed all event listeners and observers');
     this.props.onRemove();
   }
+}
+
+function isElementInViewport (el) {
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /* or $(window).height() */
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth) /* or $(window).width() */
+  );
 }
 
 async function createTooltip(
@@ -226,6 +234,7 @@ async function createTooltip(
     offset: <Props['offset']>offset,
   };
   const tooltipInstance = new Tooltip(allProps, reference);
+
   await tooltipInstance.create();
 
   const instance: Instance = {

@@ -68,3 +68,5 @@ export function scrollElementIntoView(element: HTMLElement) {
     inline: "center",
   });
 }
+
+export const isDOMElement = el => el instanceof Element

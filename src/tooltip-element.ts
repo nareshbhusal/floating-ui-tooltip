@@ -25,11 +25,6 @@ const createTooltipElement = (instanceEnv): HTMLDivElement => {
   Object.assign(tooltipContent.style, {
     maxWidth: `${instanceEnv.props.maxWidth}px`
   })
-  tooltipContent.innerHTML = `
-    <div id="tooltip-container">
-    <h3>Default tooltip</h3>
-    </div>
-  `;
 
   tooltipBox.setAttribute('role', 'tooltip');
   setElementVisibility(tooltipRoot, 'hidden');

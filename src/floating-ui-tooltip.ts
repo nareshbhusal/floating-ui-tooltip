@@ -44,9 +44,6 @@ const getPosition = ({ passedPlacement, tooltipElement, toResetPosition }): Posi
     return passedPlacement.position;
   }
 
-  console.log(`toResetPosition: ${toResetPosition}`);
-
-  // window.alert(`${toResetPosition}, ${isElementOverflowingDocument(tooltipElement)}, ${newlyShown}`);
   if (!toResetPosition) return currentPosition;
   if (isElementOverflowingDocument(tooltipElement)) {
     console.log('tooltip overflown')
@@ -54,7 +51,7 @@ const getPosition = ({ passedPlacement, tooltipElement, toResetPosition }): Posi
       return 'auto';
     }
   } else {
-    console.log('tooltip not overflown')
+    // console.log('tooltip not overflown')
   }
   return currentPosition;
 }
@@ -188,9 +185,7 @@ const floatingUITooltip = async (
   toResetPosition: boolean | undefined,
   setState: (state: Partial<TooltipState>)=> void
 ) => {
- const { toFlip=false, toShift=true } = {};
-
- // window.alert(newlyShown)
+  const { toFlip=false, toShift=true } = {};
 
   let {
     placement: passedPlacement,
@@ -207,16 +202,18 @@ const floatingUITooltip = async (
   const { arrow: arrowElement } = getChildren(tooltipElement);
   const newlyShown = !tooltipElement['_instance'].getState().fui;
 
-  // TODO: so target resolves to false on first run of this module
-  if(!target) return;
-  tooltipElement.style.visibility = 'visible';
+
+  if(!target) {
+    return console.warn('target element not found');
+  }
 
   let fui = await computeTooltip({ passedPlacement, toResetPosition, passedOffset, resetPlacementOnUpdate, toShift, toShowArrow, arrowElement, tooltipElement, target, newlyShown });
+
   renderTooltip({ fui, newlyShown, scrollIntoView, hideOnReferenceHidden, hideOnTooltipEscape, tooltipElement, arrowElement, target, toHide, showOnCreate, arrowSizeScale });
+
   setState({
     fui
-  })
-
+  });
   return fui;
 }
 

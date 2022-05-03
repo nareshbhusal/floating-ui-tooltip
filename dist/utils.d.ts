@@ -6,3 +6,4 @@ export declare function getTransitionState(element: HTMLDivElement): TransitionS
 export declare function setElementVisibility(tooltipElement: HTMLDivElement, newVisibilityState: Visibility): void;
 export declare function onTransitionEnd(element: HTMLDivElement, callback: Function): void;
 export declare function scrollElementIntoView(element: HTMLElement): void;
+export declare const isDOMElement: (el: any) => boolean;

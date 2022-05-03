@@ -8,11 +8,14 @@ function setTooltipVisibilityState(tooltipElement: HTMLDivElement, visibility: V
   });
 }
 
+// console.log = () => {}
+
 // TODO: Any way to preserve the latest caught method call and to plug it at the end in onTransitionEnd callback?
 // -- [IMPORTANT]
 let LAST_VISIBILITY_STATE: VisibilityState | '' = '';
 // TODO: Maybe just try running this as a debounce method
 // -- debounce method runs the last call right?
+// TODO: This mechanics means ignoring the last call a lot of the times
 
 export default function setTooltipVisibility(tooltipElement: HTMLDivElement, newVisibilityState: VisibilityState) {
   const instance = tooltipElement['_instance'];

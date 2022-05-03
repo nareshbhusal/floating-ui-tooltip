@@ -2,7 +2,6 @@ import { Placement as FUIPlacement, ComputePositionReturn } from '@floating-ui/d
 
 export type Position = FUIPlacement | 'auto';
 export type Orientation = 'fixed' | 'auto';
-export type EndPosition = FUIPlacement;
 
 export interface Placement {
   position: Position;
@@ -12,7 +11,7 @@ export interface Placement {
 export interface Props {
   allowHTML: boolean;
   // content: string | HTMLElement | ((target: Element) => HTMLElement);
-  content: string;
+  content: string | Element;
   arrow: boolean;
   transitionDuration: number | [number | null, number | null];
   offset: [number | undefined, number | undefined];
@@ -41,7 +40,6 @@ export interface TooltipState {
   isShown: boolean;
   isRemoved: boolean;
   fui: ComputePositionReturn | undefined;
-  position: FUIPlacement | undefined;
 }
 
 export type Visibility = 'hidden' | 'visible';
