@@ -94,6 +94,8 @@ const renderTooltip = ({ fui, newlyShown, scrollIntoView, hideOnReferenceHidden,
     });
 
     const TIP_SIZE = arrowSizeScale * DEFAULT_TIP_SIZE;
+    console.log(`size scale: ${arrowSizeScale}`)
+    console.log(`arrow size: ${TIP_SIZE}`)
 
     const staticSide = TIP_SIDES_MAP[placement.split("-")[0]];
     let staticSideTipSizeMultiplier: string | number = 0;
@@ -131,6 +133,8 @@ const renderTooltip = ({ fui, newlyShown, scrollIntoView, hideOnReferenceHidden,
       top,
       right: "",
       bottom: "",
+      width: `${TIP_SIZE}px`,
+      height: `${TIP_SIZE}px`,
       [staticSide]: `-${TIP_SIZE*staticSideTipSizeMultiplier}px`
     });
 }
