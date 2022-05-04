@@ -6,7 +6,8 @@ const defaultProps = {
   arrow: true,
   scrollIntoView: false,
   transitionDuration: [300, 250],
-  offset: [10, 0],
+  offset: [0, 0],
+  factorArrowInOffset: true,
   hideOnClick: true, // `true` for anywhere outside the tooltip to hide it, 'target' for only when the target is clicked
   onClickOutside: (instance: Instance, event: MouseEvent) => {},
   onShow: (instance: Instance) => {},

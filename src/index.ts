@@ -3,12 +3,13 @@ import addCSS from './addCSS';
 import { Props, TooltipState, Instance } from './types';
 import floatingUITooltip from './floating-ui-tooltip';
 import defaultProps from './defaultProps';
-import { scrollElementIntoView } from './utils';
 import debounce from './debounce';
 import { autoUpdate } from '@floating-ui/dom';
 
+import { DEFAULT_TIP_SIZE } from './constants';
+export const DEFAULT_ARROW_SIZE = DEFAULT_TIP_SIZE;
+
 // TODO: Ability to import js bundle without the css
-// TODO: Add ability to pass dom element as content
 
 const appendTo = () => document.body;
 
@@ -233,6 +234,12 @@ async function createTooltip(
     transitionDuration: <Props['transitionDuration']>transitionDuration,
     offset: <Props['offset']>offset,
   };
+  allProps.factorArrowInOffset = allProps.arrow && allProps.factorArrowInOffset;
+
+  if (allProps.factorArrowInOffset) {
+    const arrowSize = allProps.arrowSizeScale * DEFAULT_ARROW_SIZE;
+    allProps.offset[0] = allProps.offset[0]! + (arrowSize * Math.sqrt(2) / 2);
+  }
   const tooltipInstance = new Tooltip(allProps, reference);
 
   await tooltipInstance.create();

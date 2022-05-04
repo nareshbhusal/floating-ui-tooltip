@@ -13,9 +13,8 @@ import { Props, TooltipState, Visibility, Placement, Position } from './types';
 import { scrollElementIntoView } from './utils';
 import setTooltipVisibility from './setTooltipVisibility';
 
-const SCREEN_EDGE_MARGIN = 16;
-const TIP_EDGE_MARGIN = 2;
-const DEFAULT_TIP_SIZE = 12;
+import { SCREEN_EDGE_MARGIN, TIP_EDGE_MARGIN, DEFAULT_TIP_SIZE } from './constants';
+
 const TIP_WIDTH = Math.sqrt(2 * DEFAULT_TIP_SIZE ** 2) / 2;
 
 const TIP_SIDES_MAP = {
@@ -106,6 +105,7 @@ const renderTooltip = ({ fui, newlyShown, scrollIntoView, hideOnReferenceHidden,
     switch(staticSide) {
       case 'top':
         staticSideTipSizeMultiplier = 1/1.7;
+        staticSideTipSizeMultiplier = 1/2;
       left = arrowX !== null ? `${arrowX + (TIP_SIZE*staticSideTipSizeMultiplier)}px` : "";
       break;
       case 'bottom':
@@ -118,7 +118,7 @@ const renderTooltip = ({ fui, newlyShown, scrollIntoView, hideOnReferenceHidden,
       top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
       break;
       case 'right':
-        staticSideTipSizeMultiplier = 1.2;
+        staticSideTipSizeMultiplier = 1;
       left = arrowX !== null ? `${arrowX}px` : "",
       top = arrowY !== null ? `${arrowY - (TIP_SIZE*staticSideTipSizeMultiplier)/2}px` : "";
       break;

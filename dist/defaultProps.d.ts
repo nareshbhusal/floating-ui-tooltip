@@ -6,6 +6,7 @@ declare const defaultProps: {
     scrollIntoView: boolean;
     transitionDuration: number[];
     offset: number[];
+    factorArrowInOffset: boolean;
     hideOnClick: boolean;
     onClickOutside: (instance: Instance, event: MouseEvent) => void;
     onShow: (instance: Instance) => void;

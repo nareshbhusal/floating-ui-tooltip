@@ -11,6 +11,7 @@ export interface Props {
     arrow: boolean;
     transitionDuration: number | [number | null, number | null];
     offset: [number | undefined, number | undefined];
+    factorArrowInOffset: boolean;
     hideOnClick: boolean | 'target';
     onClickOutside: (instance: Instance, event: MouseEvent) => void;
     onShow: (instance: Instance) => void;
