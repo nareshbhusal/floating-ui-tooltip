@@ -29,7 +29,7 @@ export function updateTransitionEndListener(
 
 export function setTransitionState(element: HTMLDivElement, state: TransitionState) {
   element.setAttribute('data-transition-state', state);
-  console.log('>> new transition state: '+state)
+  // console.log('>> new transition state: '+state)
 }
 
 export function getTransitionState(element: HTMLDivElement): TransitionState {

@@ -1,61 +1,65 @@
 import { onTransitionEnd, getTransitionState, setTransitionState, setElementVisibility } from './utils';
 import { Visibility, TransitionState } from './types';
 
-function setTooltipVisibilityState(tooltipElement: HTMLDivElement, visibility: Visibility) {
+const setTooltipVisibilityState = (tooltipElement: HTMLDivElement, visibility: Visibility): void => {
   const instance = tooltipElement['_instance'];
   instance.setState({
     isShown: visibility === 'visible'
   });
 }
 
-// console.log = () => {}
+let timeout: any;
 
-// TODO: Any way to preserve the latest caught method call and to plug it at the end in onTransitionEnd callback?
-// -- [IMPORTANT]
-let LAST_VISIBILITY_STATE: VisibilityState | '' = '';
-// TODO: Maybe just try running this as a debounce method
-// -- debounce method runs the last call right?
-// TODO: This mechanics means ignoring the last call a lot of the times
+const clearQueue = (timeout: any) => clearTimeout(timeout);
+
+const queue = (tooltipElement: HTMLDivElement, newVisibilityState: VisibilityState, updateDebounce: number): void => {
+  const timeoutDuration = updateDebounce || 100;
+
+  clearTimeout(timeout);
+  timeout = setTimeout(() => {
+    setTooltipVisibility(tooltipElement, newVisibilityState);
+  }, timeoutDuration);
+}
+
 
 export default function setTooltipVisibility(tooltipElement: HTMLDivElement, newVisibilityState: VisibilityState) {
+  clearQueue(timeout);
   const instance = tooltipElement['_instance'];
+  const updateDebounce = instance.props.updateDebounce;
   const currentTransitionState: TransitionState = getTransitionState(tooltipElement);
 
-  console.log('``````````')
+  /* console.log('``````````')
   console.log('\n')
-  console.log(newVisibilityState, currentTransitionState);
+  console.log(newVisibilityState, currentTransitionState); */
 
   if (newVisibilityState === 'visible') {
     if (currentTransitionState === 'shown' || currentTransitionState === 'showing') {
-      console.log(`already ${currentTransitionState}`)
+      // console.log(`already ${currentTransitionState}`)
       return;
 
     } else if (currentTransitionState === 'hidden') {
-      console.log('showing')
-      LAST_VISIBILITY_STATE = '';
+      // console.log('showing')
       setTransitionState(tooltipElement, 'showing');
       // proceed to show
 
     } else if (currentTransitionState === 'hiding') {
-      console.log(`cancelling ${currentTransitionState}`)
-      LAST_VISIBILITY_STATE = newVisibilityState;
-      // NOTE: where should this be again?^
+      // console.log(`cancelling ${currentTransitionState}`)
+      queue(tooltipElement, newVisibilityState, updateDebounce);
       return;
     }
   } else {
     if (currentTransitionState === 'hidden' || currentTransitionState === 'hiding') {
-      console.log(`already ${currentTransitionState}`)
+      // console.log(`already ${currentTransitionState}`)
       return;
 
     } else if (currentTransitionState === 'shown') {
-      LAST_VISIBILITY_STATE = '';
       setTransitionState(tooltipElement, 'hiding');
       instance.props.onHide(instance);
       // proceed to hide
 
     } else if (currentTransitionState === 'showing') {
-      console.log(`cancelling ${currentTransitionState}`)
-      LAST_VISIBILITY_STATE = newVisibilityState;
+      // console.log(`cancelling ${currentTransitionState}`)
+      queue(tooltipElement, newVisibilityState, updateDebounce);
       return;
     }
   }
