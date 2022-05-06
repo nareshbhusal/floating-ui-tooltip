@@ -20,7 +20,7 @@
   "author": "",
   "license": "ISC",
   "peerDependencies": {
-    "@floating-ui/dom": "^0.3.1"
+    "@floating-ui/dom": ">=0.0.1"
   },
   "devDependencies": {
     "@babel/core": "7.16.5",
