@@ -29,70 +29,77 @@ Props is an object with the following properties:
 
 #### `allowHTML`
 Type: `boolean`
+
 Default: `true`
 
 #### `content`
 Type: `string` | `Element`
+
 Default: `''`
 
 #### `arrow`
 Type: `boolean`
+
 Default: `true`
 
 #### `transitionDuration`
 Type: `number` | `[number | null, number | null]`
+
 Default: `[300, 250]`
 
 #### `offset`
 Type: `[number | undefined, number | undefined]`
+
 Default: `[0, 0]`
 
 #### `factorArrowInOffset`
 Type: `boolean`
+
 Default: `true`
 
 #### `hideOnClick`
 Type: `boolean`
+
 Default: `true`
 
 #### `onClickOutside()`
 Type: `(instance: Instance, event: MouseEvent) => void`
-Defaukt: `(instance: Instance, event: MouseEvent) => {}`
+
+Default: `(instance: Instance, event: MouseEvent) => {}`
 
 #### `onShow()`
 Type: `(instance: Instance) => void`
+
 Default: `(instance: Instance) => {}`
 
 #### `onHide`
 Type: `(instance: Instance) => void`
+
 Default: `(instance: Instance) => {}`
 
 
 #### `onStateChange()`
 Type: `(oldState: TooltipState, newState: Partial<TooltipState>) => void`
+
 Default: `(oldState: TooltipState, newState: Partial<TooltipState>) => {}`
 
 #### `onRemove()`
 Type: `() => void`
+
 Default: `() => {}`
 
 #### `onBeforeFirstRender()`
 Type: `() => void`
+
 Default: `() => {}`
 
 #### `onAfterFirstRender()`
 Type: `() => void`
+
 Default: `() => {}`
 
 #### `placement`
 Type: `Placement`
-Default:
-```typescript
-{
-    position: 'top',
-    orientation: 'fixed'
-}
-```
 
 ```typescript
 type Position = FUIPlacement | 'auto';
@@ -104,45 +111,66 @@ type Placement = {
 }
 ```
 
+Default:
+```typescript
+{
+    position: 'top',
+    orientation: 'fixed'
+}
+```
+
+
 #### `resetPlacementOnUpdate`
 Type: `boolean`
+
 Default: `false`
 
 #### `hideOnTooltipEscape`
 Type: `boolean`
+
 Default: `true`
 
 #### `hideOnReferenceHidden`
 Type: `boolean`
+
 Default: `true`
 
 #### `showOnCreate`
 Type: `boolean`
+
 Default: `true`
 
 #### `scrollIntoView`
 Type: `boolean`
+
 Default: `false`
 
 #### `maxWidth`
 Type: `number`
+
 Default: `350`
 
 #### `arrowSizeScale`
 Type: `number`
+
 Default: `1`
 
 #### `updateDebounce`
 Type: `number`
+
 Default: `100`
 
 #### `zIndex`
 Type: `number`
+
 Default: `99999`
 
 #### `updateOnEvents`
 Type: `number`
+
 Default: `resize scroll`
+
+<hr></hr>
 
 ### Instance
 
@@ -177,7 +205,7 @@ The target element of the tooltip
 Dom element representating the tooltip
 
 #### `getState()`
-Method that runs the state of the tooltip element
+Method that returns the state object of the tooltip element
 
 ##### `isShown`
 `true` if the tooltip is visible
